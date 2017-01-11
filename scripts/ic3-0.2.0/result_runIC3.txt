@@ -1,0 +1,238 @@
+Warning: java.lang.invoke.LambdaMetafactory is a phantom class!
+Warning: java.lang.ref.Finalizer is a phantom class!
+Warning: com.example.testic3.SecondActivity is a phantom class!
+Warning: com.example.testic3.MainActivity is a phantom class!
+[main] INFO  soot.jimple.infoflow.entryPointCreators.AndroidEntryPointCreator  - Generated main method:
+    public static void dummyMainMethod()
+    {
+        int $i0;
+
+        $i0 = 0;
+
+     label1:
+        if $i0 == 4 goto label1;
+
+        return;
+    }
+
+[Call Graph] For information on where the call graph may be incomplete, use the verbose option to the cg phase.
+[Spark] Pointer Assignment Graph in 0.0 seconds.
+[Spark] Type masks in 0.0 seconds.
+[Spark] Pointer Graph simplified in 0.0 seconds.
+[Spark] Propagation in 0.0 seconds.
+[Spark] Solution found in 0.0 seconds.
+Callback analysis done.
+Warning: android.support.v7.widget.ButtonBarLayout is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ButtonBarLayout is a phantom class!
+Warning: android.view.android.support.v7.widget.ButtonBarLayout is a phantom class!
+Warning: android.widget.android.support.v7.widget.ButtonBarLayout is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ButtonBarLayout is a phantom class!
+Warning: Button is a phantom class!
+Warning: com.example.testic3.Button is a phantom class!
+Warning: android.view.Button is a phantom class!
+Warning: android.support.v4.widget.Space is a phantom class!
+Warning: com.example.testic3.android.support.v4.widget.Space is a phantom class!
+Warning: android.view.android.support.v4.widget.Space is a phantom class!
+Warning: android.widget.android.support.v4.widget.Space is a phantom class!
+Warning: android.webkit.android.support.v4.widget.Space is a phantom class!
+Found 1 layout controls in file res/layout-v17/abc_alert_dialog_button_bar_material.xml
+Warning: LinearLayout is a phantom class!
+Warning: com.example.testic3.LinearLayout is a phantom class!
+Warning: android.view.LinearLayout is a phantom class!
+Warning: ImageView is a phantom class!
+Warning: com.example.testic3.ImageView is a phantom class!
+Warning: android.view.ImageView is a phantom class!
+Warning: android.support.v7.widget.DialogTitle is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.DialogTitle is a phantom class!
+Warning: android.view.android.support.v7.widget.DialogTitle is a phantom class!
+Warning: android.widget.android.support.v7.widget.DialogTitle is a phantom class!
+Warning: android.webkit.android.support.v7.widget.DialogTitle is a phantom class!
+Warning: FrameLayout is a phantom class!
+Warning: com.example.testic3.FrameLayout is a phantom class!
+Warning: android.view.FrameLayout is a phantom class!
+Warning: View is a phantom class!
+Warning: com.example.testic3.View is a phantom class!
+Warning: android.support.v4.widget.NestedScrollView is a phantom class!
+Warning: com.example.testic3.android.support.v4.widget.NestedScrollView is a phantom class!
+Warning: android.view.android.support.v4.widget.NestedScrollView is a phantom class!
+Warning: android.widget.android.support.v4.widget.NestedScrollView is a phantom class!
+Warning: android.webkit.android.support.v4.widget.NestedScrollView is a phantom class!
+Warning: TextView is a phantom class!
+Warning: com.example.testic3.TextView is a phantom class!
+Warning: android.view.TextView is a phantom class!
+Found 2 layout controls in file res/layout-v17/abc_alert_dialog_material.xml
+Warning: android.support.v7.widget.FitWindowsLinearLayout is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.FitWindowsLinearLayout is a phantom class!
+Warning: android.view.android.support.v7.widget.FitWindowsLinearLayout is a phantom class!
+Warning: android.widget.android.support.v7.widget.FitWindowsLinearLayout is a phantom class!
+Warning: android.webkit.android.support.v7.widget.FitWindowsLinearLayout is a phantom class!
+Found 3 layout controls in file res/layout-v17/abc_dialog_title_material.xml
+Warning: view is a phantom class!
+Warning: com.example.testic3.view is a phantom class!
+Warning: android.view.view is a phantom class!
+Warning: android.widget.view is a phantom class!
+Warning: android.webkit.view is a phantom class!
+Found 4 layout controls in file res/layout-v17/abc_search_view.xml
+Warning: RelativeLayout is a phantom class!
+Warning: com.example.testic3.RelativeLayout is a phantom class!
+Warning: android.view.RelativeLayout is a phantom class!
+Found 5 layout controls in file res/layout-v17/notification_template_big_media.xml
+Found 6 layout controls in file res/layout-v17/notification_template_big_media_narrow.xml
+Found 7 layout controls in file res/layout-v17/notification_template_lines.xml
+Found 8 layout controls in file res/layout-v17/notification_template_media.xml
+Warning: Chronometer is a phantom class!
+Warning: com.example.testic3.Chronometer is a phantom class!
+Warning: android.view.Chronometer is a phantom class!
+Found 9 layout controls in file res/layout-v17/notification_template_part_chronometer.xml
+Warning: DateTimeView is a phantom class!
+Warning: com.example.testic3.DateTimeView is a phantom class!
+Warning: android.view.DateTimeView is a phantom class!
+Warning: android.widget.DateTimeView is a phantom class!
+Warning: android.webkit.DateTimeView is a phantom class!
+Found 9 layout controls in file res/layout-v17/notification_template_part_time.xml
+Warning: CheckedTextView is a phantom class!
+Warning: com.example.testic3.CheckedTextView is a phantom class!
+Warning: android.view.CheckedTextView is a phantom class!
+Found 10 layout controls in file res/layout-v17/select_dialog_multichoice_material.xml
+Found 11 layout controls in file res/layout-v17/select_dialog_singlechoice_material.xml
+Warning: android.support.v7.widget.ActionBarOverlayLayout is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ActionBarOverlayLayout is a phantom class!
+Warning: android.view.android.support.v7.widget.ActionBarOverlayLayout is a phantom class!
+Warning: android.widget.android.support.v7.widget.ActionBarOverlayLayout is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ActionBarOverlayLayout is a phantom class!
+Warning: android.support.v7.widget.ActionBarContainer is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ActionBarContainer is a phantom class!
+Warning: android.view.android.support.v7.widget.ActionBarContainer is a phantom class!
+Warning: android.widget.android.support.v7.widget.ActionBarContainer is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ActionBarContainer is a phantom class!
+Warning: android.support.v7.widget.Toolbar is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.Toolbar is a phantom class!
+Warning: android.view.android.support.v7.widget.Toolbar is a phantom class!
+Warning: android.widget.android.support.v7.widget.Toolbar is a phantom class!
+Warning: android.webkit.android.support.v7.widget.Toolbar is a phantom class!
+Warning: android.support.v7.widget.ActionBarContextView is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ActionBarContextView is a phantom class!
+Warning: android.view.android.support.v7.widget.ActionBarContextView is a phantom class!
+Warning: android.widget.android.support.v7.widget.ActionBarContextView is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ActionBarContextView is a phantom class!
+Found 11 layout controls in file res/layout-v21/abc_screen_toolbar.xml
+Found 12 layout controls in file res/layout/abc_action_bar_title_item.xml
+Found 13 layout controls in file res/layout/abc_action_bar_up_container.xml
+Found 14 layout controls in file res/layout/abc_action_bar_view_list_nav_layout.xml
+Warning: android.support.v7.view.menu.ActionMenuItemView is a phantom class!
+Warning: com.example.testic3.android.support.v7.view.menu.ActionMenuItemView is a phantom class!
+Warning: android.view.android.support.v7.view.menu.ActionMenuItemView is a phantom class!
+Warning: android.widget.android.support.v7.view.menu.ActionMenuItemView is a phantom class!
+Warning: android.webkit.android.support.v7.view.menu.ActionMenuItemView is a phantom class!
+Found 14 layout controls in file res/layout/abc_action_menu_item_layout.xml
+Warning: android.support.v7.widget.ActionMenuView is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ActionMenuView is a phantom class!
+Warning: android.view.android.support.v7.widget.ActionMenuView is a phantom class!
+Warning: android.widget.android.support.v7.widget.ActionMenuView is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ActionMenuView is a phantom class!
+Found 14 layout controls in file res/layout/abc_action_menu_layout.xml
+Found 14 layout controls in file res/layout/abc_action_mode_bar.xml
+Found 15 layout controls in file res/layout/abc_action_mode_close_item_material.xml
+Found 16 layout controls in file res/layout/abc_activity_chooser_view.xml
+Found 17 layout controls in file res/layout/abc_activity_chooser_view_list_item.xml
+Found 18 layout controls in file res/layout/abc_alert_dialog_button_bar_material.xml
+Found 19 layout controls in file res/layout/abc_alert_dialog_material.xml
+Found 20 layout controls in file res/layout/abc_dialog_title_material.xml
+Warning: android.support.v7.view.menu.ExpandedMenuView is a phantom class!
+Warning: com.example.testic3.android.support.v7.view.menu.ExpandedMenuView is a phantom class!
+Warning: android.view.android.support.v7.view.menu.ExpandedMenuView is a phantom class!
+Warning: android.widget.android.support.v7.view.menu.ExpandedMenuView is a phantom class!
+Warning: android.webkit.android.support.v7.view.menu.ExpandedMenuView is a phantom class!
+Found 20 layout controls in file res/layout/abc_expanded_menu_layout.xml
+Warning: CheckBox is a phantom class!
+Warning: com.example.testic3.CheckBox is a phantom class!
+Warning: android.view.CheckBox is a phantom class!
+Found 21 layout controls in file res/layout/abc_list_menu_item_checkbox.xml
+Found 22 layout controls in file res/layout/abc_list_menu_item_icon.xml
+Warning: android.support.v7.view.menu.ListMenuItemView is a phantom class!
+Warning: com.example.testic3.android.support.v7.view.menu.ListMenuItemView is a phantom class!
+Warning: android.view.android.support.v7.view.menu.ListMenuItemView is a phantom class!
+Warning: android.widget.android.support.v7.view.menu.ListMenuItemView is a phantom class!
+Warning: android.webkit.android.support.v7.view.menu.ListMenuItemView is a phantom class!
+Found 23 layout controls in file res/layout/abc_list_menu_item_layout.xml
+Warning: RadioButton is a phantom class!
+Warning: com.example.testic3.RadioButton is a phantom class!
+Warning: android.view.RadioButton is a phantom class!
+Found 24 layout controls in file res/layout/abc_list_menu_item_radio.xml
+Found 25 layout controls in file res/layout/abc_popup_menu_item_layout.xml
+Warning: android.support.v7.widget.ContentFrameLayout is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ContentFrameLayout is a phantom class!
+Warning: android.view.android.support.v7.widget.ContentFrameLayout is a phantom class!
+Warning: android.widget.android.support.v7.widget.ContentFrameLayout is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ContentFrameLayout is a phantom class!
+Found 25 layout controls in file res/layout/abc_screen_content_include.xml
+Warning: android.support.v7.widget.ViewStubCompat is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.ViewStubCompat is a phantom class!
+Warning: android.view.android.support.v7.widget.ViewStubCompat is a phantom class!
+Warning: android.widget.android.support.v7.widget.ViewStubCompat is a phantom class!
+Warning: android.webkit.android.support.v7.widget.ViewStubCompat is a phantom class!
+Found 25 layout controls in file res/layout/abc_screen_simple.xml
+Warning: android.support.v7.widget.FitWindowsFrameLayout is a phantom class!
+Warning: com.example.testic3.android.support.v7.widget.FitWindowsFrameLayout is a phantom class!
+Warning: android.view.android.support.v7.widget.FitWindowsFrameLayout is a phantom class!
+Warning: android.widget.android.support.v7.widget.FitWindowsFrameLayout is a phantom class!
+Warning: android.webkit.android.support.v7.widget.FitWindowsFrameLayout is a phantom class!
+Found 25 layout controls in file res/layout/abc_screen_simple_overlay_action_mode.xml
+Found 25 layout controls in file res/layout/abc_screen_toolbar.xml
+Found 26 layout controls in file res/layout/abc_search_dropdown_item_icons_2line.xml
+Found 27 layout controls in file res/layout/abc_search_view.xml
+Warning: ListView is a phantom class!
+Warning: com.example.testic3.ListView is a phantom class!
+Warning: android.view.ListView is a phantom class!
+Found 28 layout controls in file res/layout/abc_select_dialog_material.xml
+Found 29 layout controls in file res/layout/activity_main.xml
+Found 30 layout controls in file res/layout/activity_second.xml
+Warning: ImageButton is a phantom class!
+Warning: com.example.testic3.ImageButton is a phantom class!
+Warning: android.view.ImageButton is a phantom class!
+Found 31 layout controls in file res/layout/notification_media_action.xml
+Found 32 layout controls in file res/layout/notification_media_cancel_action.xml
+Found 33 layout controls in file res/layout/notification_template_big_media.xml
+Found 34 layout controls in file res/layout/notification_template_big_media_narrow.xml
+Found 35 layout controls in file res/layout/notification_template_lines.xml
+Found 36 layout controls in file res/layout/notification_template_media.xml
+Found 37 layout controls in file res/layout/notification_template_part_chronometer.xml
+Found 37 layout controls in file res/layout/notification_template_part_time.xml
+Found 38 layout controls in file res/layout/select_dialog_item_material.xml
+Found 39 layout controls in file res/layout/select_dialog_multichoice_material.xml
+Found 40 layout controls in file res/layout/select_dialog_singlechoice_material.xml
+Found 41 layout controls in file res/layout/support_simple_spinner_dropdown_item.xml
+[main] INFO  edu.psu.cse.siis.ic3.SetupApplication  - Entry point calculation done.
+Warning: com.example.testic3.SecondActivity is a phantom class!
+Warning: com.example.testic3.MainActivity is a phantom class!
+[main] INFO  soot.jimple.infoflow.entryPointCreators.AndroidEntryPointCreator  - Generated main method:
+    public static void dummyMainMethod()
+    {
+        int $i0;
+
+        $i0 = 0;
+
+     label1:
+        if $i0 == 4 goto label1;
+
+        return;
+    }
+
+[Call Graph] For information on where the call graph may be incomplete, use the verbose option to the cg phase.
+[Spark] Pointer Assignment Graph in 0.0 seconds.
+[Spark] Type masks in 0.0 seconds.
+[Spark] Pointer Graph simplified in 0.0 seconds.
+[Spark] Propagation in 0.0 seconds.
+[Spark] Solution found in 0.0 seconds.
+[main] INFO  edu.psu.cse.siis.coal.PropagationSceneTransformer  - Solving propagation problem (iteration 0)
+[main] INFO  edu.psu.cse.siis.coal.PropagationSceneTransformer  - Reached a fixed point
+Transforming android.content.Intent... 
+Transforming android.content.IntentFilter... 
+Transforming android.os.Bundle... 
+Transforming android.content.ComponentName... 
+Transforming android.app.Activity... 
+Transforming dummyMainClass... 
+Transforming com.example.testic3.SecondActivity... 
+Transforming com.example.testic3.MainActivity... 
+
+*****Manifest*****

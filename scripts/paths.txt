@@ -1,0 +1,5 @@
+COVERT_PATH=/Users/Mahmoud/Documents/eclipseWorkspace/covert/runCovert.sh
+IC3_DIR=/Volumes/Android/lpdroid_models/scripts/ic3-0.2.0/
+APK_REPO=/Volumes/Android/lpdroid_models/apks/
+MODEL_REPO=/Volumes/Android/lpdroid_models/models/
+DATA_STORAGE=/Volumes/Android/lpdroid_models/logs/

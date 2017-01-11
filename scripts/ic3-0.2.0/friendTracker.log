@@ -1,0 +1,100 @@
+Warning: java.lang.invoke.LambdaMetafactory is a phantom class!
+Warning: java.lang.ref.Finalizer is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.FriendTracker is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.FriendTrackerControl is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.FriendProvider is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.BootReceiver is a phantom class!
+[main] INFO  soot.jimple.infoflow.entryPointCreators.AndroidEntryPointCreator  - Generated main method:
+    public static void dummyMainMethod()
+    {
+        int $i0;
+
+        $i0 = 0;
+
+     label1:
+        if $i0 == 8 goto label1;
+
+        return;
+    }
+
+[Call Graph] For information on where the call graph may be incomplete, use the verbose option to the cg phase.
+[Spark] Pointer Assignment Graph in 0.0 seconds.
+[Spark] Type masks in 0.0 seconds.
+[Spark] Pointer Graph simplified in 0.0 seconds.
+[Spark] Propagation in 0.0 seconds.
+[Spark] Solution found in 0.0 seconds.
+Callback analysis done.
+Warning: LinearLayout is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.LinearLayout is a phantom class!
+Warning: android.view.LinearLayout is a phantom class!
+Warning: TextView is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.TextView is a phantom class!
+Warning: android.view.TextView is a phantom class!
+Warning: Button is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.Button is a phantom class!
+Warning: android.view.Button is a phantom class!
+Found 1 layout controls in file res/layout/main.xml
+[main] INFO  edu.psu.cse.siis.ic3.SetupApplication  - Entry point calculation done.
+Warning: org.siislab.tutorial.friendtracker.FriendTracker is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.FriendTrackerControl is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.FriendProvider is a phantom class!
+Warning: org.siislab.tutorial.friendtracker.BootReceiver is a phantom class!
+[main] INFO  soot.jimple.infoflow.entryPointCreators.AndroidEntryPointCreator  - Generated main method:
+    public static void dummyMainMethod()
+    {
+        int $i0;
+
+        $i0 = 0;
+
+     label1:
+        if $i0 == 8 goto label1;
+
+        return;
+    }
+
+[Call Graph] For information on where the call graph may be incomplete, use the verbose option to the cg phase.
+[Spark] Pointer Assignment Graph in 0.0 seconds.
+[Spark] Type masks in 0.0 seconds.
+[Spark] Pointer Graph simplified in 0.0 seconds.
+[Spark] Propagation in 0.0 seconds.
+[Spark] Solution found in 0.0 seconds.
+[main] INFO  edu.psu.cse.siis.coal.PropagationSceneTransformer  - Solving propagation problem (iteration 0)
+[main] INFO  edu.psu.cse.siis.coal.PropagationSceneTransformer  - Reached a fixed point
+Unknown entry point type: org.siislab.tutorial.friendtracker.FriendTracker
+Unknown entry point type: org.siislab.tutorial.friendtracker.FriendTrackerControl
+Unknown entry point type: org.siislab.tutorial.friendtracker.FriendProvider
+Unknown entry point type: org.siislab.tutorial.friendtracker.BootReceiver
+Transforming android.content.Intent... 
+Transforming android.content.IntentFilter... 
+Transforming android.os.Bundle... 
+Transforming android.content.ComponentName... 
+Transforming android.app.Activity... 
+Transforming dummyMainClass... 
+Transforming org.siislab.tutorial.friendtracker.FriendTracker... 
+Transforming org.siislab.tutorial.friendtracker.FriendTrackerControl... 
+Transforming org.siislab.tutorial.friendtracker.FriendProvider... 
+Transforming org.siislab.tutorial.friendtracker.BootReceiver... 
+
+*****Manifest*****
+Manifest file for org.siislab.tutorial.friendtracker version 1
+  Activities:
+    org.siislab.tutorial.friendtracker.FriendTrackerControl
+      Intent filter:
+        Actions: [android.intent.action.MAIN]
+        Categories: [android.intent.category.LAUNCHER]
+
+  Activity Aliases:
+  Services:
+    org.siislab.tutorial.friendtracker.FriendTracker
+  Receivers:
+    org.siislab.tutorial.friendtracker.BootReceiver
+      Intent filter:
+        Actions: [android.intent.action.BOOT_COMPLETED]
+  Providers:
+    org.siislab.tutorial.friendtracker.FriendProvider
+      authority: friends
+      write permission: org.siislab.tutorial.permission.WRITE_FRIENDS
+
+*****Result*****
+[main] INFO  edu.psu.cse.siis.ic3.ResultProcessor  - org.siislab.tutorial.friendtracker 29 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 30 709 6 402 10 21 0 0 486 89 2058
+

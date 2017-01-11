@@ -1,0 +1,1 @@
+dare -d ../dare_output/testIC3 ../ic3-0.2.0/testic3.apk

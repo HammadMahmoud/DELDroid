@@ -1,0 +1,3 @@
+java -jar ic3-0.2.0-full.jar -input ../dare_output/friendTracker/retargeted/FriendTracker/ -apkormanifest ../ic3_toy_apps/FriendTracker.apk -cp ./android.jar -db /Users/Mahmoud/Documents/eclipseWorkspace/ic3/src/main/resources/db/cc.properties
+
+java -jar ic3-0.2.0-full.jar -input /Volumes/Android/lpdroid_models/models/iccta/dare/com.alibaba.android.babylon/retargeted/048027F5FE5813AD91E223A55AEAE5B83997EE69301DCF2D24A5930643FDB434/ -apkormanifest /Volumes/Android/adaptation_dataset/iccre_iccta/installed/048027F5FE5813AD91E223A55AEAE5B83997EE69301DCF2D24A5930643FDB434.apk -cp ./android.jar -db ./db/cc.properties
