@@ -1,0 +1,16 @@
+
+body {    
+    background-color: #93c193;
+}
+h1 {
+    color: maroon;
+    margin-left: 40px;
+}
+input
+{
+  -moz-border-radius: 15px;
+ border-radius: 15px;
+    border:solid 1px black; 
+    padding:10px;
+}
+ 
