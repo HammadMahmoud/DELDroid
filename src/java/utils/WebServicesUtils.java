@@ -23,13 +23,15 @@ public class WebServicesUtils {
     
     
     //DELDroid-related paths
-//    public static final String DELDROID_ROOT = "/Volumes/Android/lpdroid_models/";
 //    public static final String DELDROID_ROOT = "/Users/Mahmoud/Documents/PhD_projects/DELDroid/eval_10bundles_30apps_33times/";
-    public static final String DELDROID_ROOT = "/Volumes/Android/lpdroid_models/";
+    public static final String DELDROID_ROOT = "/Users/Mahmoud/Documents/PhD_projects/DELDroid/deldroid_root/";
+//    public static final String DELDROID_ROOT = "/Volumes/Android/lpdroid_models/";
     public static final String LP_RULES_PATH = DELDROID_ROOT+"DELDroid_output/";
     public static final String DSM_FILES_PATH = LP_RULES_PATH;
-    public static final String EXPERIMENT_RESULTS_FILES_PATH = DELDROID_ROOT+"results.txt";    
-    public static final String ArchExtractor_FILES_PATH = DELDROID_ROOT+"all_arch_models/";
+    public static final String EXPERIMENT_RESULTS_FILES_PATH = DELDROID_ROOT+"results.csv";    
+//    public static final String ArchExtractor_FILES_PATH = DELDROID_ROOT+"all_arch_models/";
+    public static final String ArchExtractor_FILES_PATH = DELDROID_ROOT+"jss_models/arch/";
+    
     public static final String DELDROID_SCRIPTS_PATH=DELDROID_ROOT+"scripts/";    
     public static final String PATHS_FILE=DELDROID_SCRIPTS_PATH+"paths.txt";    
     public static final String resourceSysServiceFile=DELDROID_ROOT+"services/permission_SysServiceMap.txt";

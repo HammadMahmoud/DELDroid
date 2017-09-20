@@ -140,4 +140,13 @@ public class Application {
                 this.appUsesPermissions.size()+sep+
                 this.appActuallyUsesPermissions.size();
     }
+    @Override
+    public boolean equals(Object o){
+        if (!( o instanceof Application)){
+            return false;
+        }
+        Application that = (Application) o;
+        
+        return this.packageName.equals(that.packageName);
+    }
 }

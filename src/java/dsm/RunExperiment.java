@@ -23,16 +23,18 @@ import static utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
  */
 public class RunExperiment {
 
-    private static final int REPETITION = 1;
-    private static final int FROM_BUNDLE_NO = 51;
-    private static final int TO_BUNDLE_NO = 90;
+    private static final int REPETITION = 33;
+    private static final int FROM_BUNDLE_NO = 1;
+    private static final int TO_BUNDLE_NO = 10;
 
     public static void main(String[] args) {
         runAllBundles();
     }
 
-    private static void deleteBundleData(int bundleNo) {
-        DataManager.deleteBundle(bundleNo, false);
+    private static void deleteBundleData(int bundleNo) throws Exception{
+        throw new Exception("Are you sure you want to delete all the data related to bundle "+bundleNo+" from the MySQL dabase?"
+                + "if yes, then, comment this statement :-) ");
+//        DataManager.deleteBundle(bundleNo, false);
     }
 
     private static void runAllBundles() {

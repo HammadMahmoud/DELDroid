@@ -28,10 +28,10 @@ public class DELDroid {
             runStaticTools();        
 
             //Generates the LP architecture and analyzes it
-//            LPDetermination.main(args);
-//
+            LPDetermination.main(args);
+
             //Enforces the LP architecture
-    //        LPEnforcement.pushRules(); 
+            LPEnforcement.pushRules(); 
 //        }
 //        }
     }
