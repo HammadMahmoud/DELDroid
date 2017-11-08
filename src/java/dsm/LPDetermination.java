@@ -56,7 +56,7 @@ import static utils.WebServicesUtils.cpAuthorityPermissionsFile;
  */
 public class LPDetermination {
 
-    static int BUNDLE_NO = 1;
+    static int BUNDLE_NO = 51;
 
     static boolean TESTING_EXPERIMENT = false;
     static boolean SHORT_NAME=true;
@@ -72,6 +72,7 @@ public class LPDetermination {
     static Set<String> uniqueIAC; //each element is senderComponentID,receiverComponentId
 
     public static Map<String, Application> apps;
+    public static Set<String> allUsedPermissions;
     public static Map<Integer, Component> componentsMap; //map componentId to its component
 //    static Map<String, String> actionComponentMap;
     static Set<Component> missingComps;
@@ -130,6 +131,14 @@ public class LPDetermination {
 
     //inter-app (IA) statistics    
     static int[] interAppStatistics;
+
+    private static void addAllUsedPermissions() {
+        for (Application app : apps.values()){
+            for (String p : app.getAppUsesPermissions()){
+                allUsedPermissions.add(p);
+            }
+        }        
+    }
 
     public static enum interAppVar {
 
@@ -221,6 +230,11 @@ public class LPDetermination {
             //Add IC3 apps
             addIC3Applications(LPDetermination.apps, BUNDLE_NO);
             addIC3AppUsesPermissions(LPDetermination.apps, BUNDLE_NO);
+            addAllUsedPermissions();
+//            System.out.println("This system uses "+allUsedPermissions.size()+" permissions.");
+//            System.out.println(allUsedPermissions);
+            
+            
 
             //Domain 1: IC3 components
             addIC3Components(LPDetermination.componentsMap, BUNDLE_NO);
@@ -476,8 +490,11 @@ public class LPDetermination {
 
             //write the results in the experiment file
             Path path = Paths.get(EXPERIMENT_RESULTS_FILES_PATH);
-
+            if (! Files.exists(path)){
+                Files.write(path, (EXP_HEADER).getBytes(), StandardOpenOption.CREATE);
+            }
             Files.write(path, (summary).getBytes(), StandardOpenOption.APPEND);
+            
 //            System.out.println("Number Explicit LP-IAC:" + interAppStatistics[interAppVar.LP_DOMAIN1_EX.getIndex()]);
 //            System.out.println("Number Implicit LP-IAC:" + interAppStatistics[interAppVar.LP_DOMAIN1_IM.getIndex()]);
 //            System.out.println("Number CP access LP-IAC:" + interAppStatistics[interAppVar.LP_DOMAIN1_CP.getIndex()]);
@@ -486,6 +503,12 @@ public class LPDetermination {
 //        System.out.println("actionCompCntMap\n" + actionCompCntMap);
             
             checkComm(CHECK_SENDER, CHECK_RECEIVER);
+            
+            //************** Visualization tool
+            VisualizationFiles.printApps(apps);
+            VisualizationFiles.printAnalysisResult(lp_uir, lp_is, lpPrivInstances);
+            VisualizationFiles.printMDM(dsm, dsmIdxComponentIdMap, componentsMap, resourceStartIdx);
+            
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -583,6 +606,7 @@ public class LPDetermination {
         lp_uir = new HashSet<>();
         lp_is = new HashSet<>();
         contrainedContextServices = new HashSet<>();
+        allUsedPermissions = new HashSet<>();
 
     }
 
@@ -704,7 +728,7 @@ public class LPDetermination {
         });
     }
 
-    private static void updateComponentsDsmIdx() {
+    public static void updateComponentsDsmIdx() {
         /*
          update the component's dsmIdx attribute
          insert entries in dsmIdxComponentIdMap
@@ -731,7 +755,7 @@ public class LPDetermination {
 
     }
 
-    private static void generateDSM() {
+    static void generateDSM() {
 //        System.out.println("dsmIdxComponentIdMap contains " + dsmIdxComponentIdMap.size() + " elements");
         int n = componentsMap.size();
         dsm = new int[n][n];
@@ -1048,7 +1072,7 @@ public class LPDetermination {
         }
     }
 
-    private static Set<Integer> doIntentResolution(Intent i) {
+    private static Set<Integer> doIntentResolution(Intent i) {        
         //returns a set of components' names that can handle this intent
         Set<Integer> s = new HashSet<>();
         for (Entry<Integer, Component> e : componentsMap.entrySet()) {
@@ -1065,7 +1089,7 @@ public class LPDetermination {
     private static boolean matchReceiverType(String compType, String receiverType) {
         //compType: activity, service, provider, receiver
         //receiverType: a, s, p, r
-        return compType.substring(0, 1).equalsIgnoreCase(receiverType);
+        return compType.substring(0, 1).equalsIgnoreCase(receiverType.substring(0, 1));
     }
 
     private static boolean matches(String compType, IntentFilter f, Intent i) {
@@ -1271,7 +1295,7 @@ public class LPDetermination {
 //        }
 //        outputWriter.write("\n=================== DSM ===================\n");
 //    }
-    private static void compToResourceDSM() {
+    public static void compToResourceDSM() {
         String resourceName = null;
         try {
             for (Component c : componentsMap.values()) {
@@ -1322,7 +1346,7 @@ public class LPDetermination {
                 }
             }
 
-            //code 2: has permission. If a component C communicates with another component R that uses permission P, then C1 has P permission.
+            //code 2: has permission. If a component C1 communicates with another component R that uses permission P and C1's app has that pemrission, then C1 has P permission.
             for (int i = 0; i < dsm.length; i++) {
                 for (int j = 0; j < dsm.length; j++) {
                     if (i == j) {

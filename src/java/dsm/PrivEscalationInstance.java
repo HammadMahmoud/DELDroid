@@ -5,10 +5,18 @@
  */
 package dsm;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  *
  * @author Mahmoud
  */
+@XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlType(propOrder = {"senderDsmIdx","senderComponent","receiverDsmIdx","receiverComponent", "resourceDsmIdx","resource"})
+
 public class PrivEscalationInstance {
     private int senderDsmIdx;
     private int receiverDsmIdx;
@@ -51,6 +59,19 @@ public class PrivEscalationInstance {
         }
         PrivEscalationInstance p = (PrivEscalationInstance) o;
         return (this.receiverDsmIdx==p.receiverDsmIdx) && (this.senderDsmIdx==p.senderDsmIdx) && (this.resourceDsmIdx==p.resourceDsmIdx);
+    }
+    
+    @XmlElement(name = "senderComponent")
+    public String getSenderComponent(){
+        return LPDetermination.componentsMap.get(LPDetermination.dsmIdxComponentIdMap.get(this.senderDsmIdx)).getName();
+    }
+    @XmlElement(name = "receiverComponent")
+    public String getReceiverComponent(){
+        return LPDetermination.componentsMap.get(LPDetermination.dsmIdxComponentIdMap.get(this.receiverDsmIdx)).getName();        
+    }
+    @XmlElement(name = "resource")
+    public String getResource(){
+        return LPDetermination.componentsMap.get(LPDetermination.dsmIdxComponentIdMap.get(this.resourceDsmIdx)).getName();                
     }
     
 }

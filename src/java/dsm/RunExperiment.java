@@ -47,7 +47,9 @@ public class RunExperiment {
                 for (int i = 0; i < REPETITION; i++) {
                     LPDetermination.main(new String[0]);
                 }
-//                Files.write(Paths.get(EXPERIMENT_RESULTS_FILES_PATH), ("\nBundle "+finishedBundle).getBytes(), StandardOpenOption.APPEND);
+                if (REPETITION>1){
+                    Files.write(Paths.get(EXPERIMENT_RESULTS_FILES_PATH), ("\nBundle "+finishedBundle).getBytes(), StandardOpenOption.APPEND);
+                }
                 finishedBundle++;
             }
         } catch (FileNotFoundException ex) {

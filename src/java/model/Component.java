@@ -11,33 +11,66 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 import static utils.WebServicesUtils.UNKNOW_PACKAGE;
 
 /**
  *
  * @author Mahmoud
  */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(propOrder = {"componentId","dsmIdx", "name", "packageName","type", "exported", "requiredPrmToAccess", 
+                      "providerReadPermission", "providerWritePermission", "providerAuthority",
+                      "requiredPermissions", "actuallyUsedPermissions", "intentFilters"})
 public class Component implements Comparable{
+    @XmlTransient
     private static Set<Integer> ids=new HashSet<>();
+    @XmlTransient
     private static int SEQUENCE_ID=1000000;
     
     //instance variables
 //    private int id;
     private int componentId;//this is the IC3 component id
-    private String packageName;
-    private String type;
-    private String name;
-    private String exported;    //T true or F false
-    private String requiredPrmToAccess; //Other component needs only this permission to communicate with this Component
-    private List<String> requiredPermissions; // This list contains permissions from the Manifest and permissions checked at runtime
-    private ArrayList<String> actuallyUsedPermissions = new ArrayList<String>();    
-    ArrayList<IntentFilter> intentFilters = new ArrayList<IntentFilter>();
-    private String discoveredIn; //S: static, IS: from the intents as sender component, IR from the intents as a receiver component, G: group permission, P: permission, A: ArchExtractor    
     private int dsmIdx;
+    @XmlElement(name = "compName")
+    private String name;
+    private String type;
+    private String exported;    //T true or F false
+    @XmlElement(name = "requiredPrmToAccess")
+    private String requiredPrmToAccess; //Other component needs only this permission to communicate with this Component
+    @XmlElement(name = "providerReadPermission")
     private String providerReadPermission;
+    @XmlElement(name = "providerWritePermission")
     private String providerWritePermission;
+    @XmlElement(name = "providerAuthority")
     private String providerAuthority;
+
+    
+    @XmlElement(name =  "appPackageName")
+    private String packageName;
+    @XmlTransient
+    private String discoveredIn; //S: static, IS: from the intents as sender component, IR from the intents as a receiver component, G: group permission, P: permission, A: ArchExtractor        
+    
+    @XmlElementWrapper(name = "compRequiredPermissions")
+    @XmlElement(name = "compRequiredPermission")
+    private List<String> requiredPermissions; // This list contains permissions from the Manifest and permissions checked at runtime
+
+    @XmlElementWrapper(name = "compActuallyUsedPermissions")
+    @XmlElement(name = "compActuallyUsedPermissionsn")
+    private ArrayList<String> actuallyUsedPermissions = new ArrayList<String>();    
+
+    @XmlElementWrapper(name = "intentFilters")
+    @XmlElement(name = "intentFilter")
+    ArrayList<IntentFilter> intentFilters = new ArrayList<IntentFilter>();
+    
+    @XmlTransient
     private List<String> appUsesPermissions; //for the use on the LP enforcement only
+    @XmlTransient
     private Set<String> ifActions; // Intent Filter actions, for the use on the LP enforcement only
 
     public Component(String packageName){
@@ -73,6 +106,11 @@ public class Component implements Comparable{
         this.intentFilters = new ArrayList<>();
         this.appUsesPermissions = new ArrayList<>();
         this.ifActions = new HashSet<>();
+        
+//        this.providerAuthority = "";
+//        this.providerReadPermission = "";
+//        this.providerWritePermission = "";
+        
 //        checkId(this.id, packageName);        
     }
 //    private void checkId(int id, String packageName){        

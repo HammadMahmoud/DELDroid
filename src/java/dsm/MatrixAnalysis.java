@@ -7,11 +7,14 @@ package dsm;
 
 import static dsm.LPDetermination.componentsMap;
 import static dsm.LPDetermination.dsmIdxComponentIdMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import model.Application;
 import model.Component;
+import model.IntentFilter;
 
 /**
  *
@@ -79,7 +82,7 @@ public class MatrixAnalysis {
         return emptyColumns;
     }
 
-    public static Set<PrivEscalationInstance> securityAnalysis(int[][] dsm, int resourceIdx, 
+    public static Set<PrivEscalationInstance> securityAnalysis(int[][] dsm, int resourceIdx,
             Set<UnauthorizedIntentReceipt> uir, Set<IntentSpoofing> is) {
         //Privilege escalation analysis
         //unauthorized Intent receipt
@@ -125,12 +128,12 @@ public class MatrixAnalysis {
         return instances;
     }
 
-    private static void iccAttackAnalysis(int senderDsmIdx, int receiverDsmIdx, int[][] dsm, 
+    private static void iccAttackAnalysis(int senderDsmIdx, int receiverDsmIdx, int[][] dsm,
             Set<UnauthorizedIntentReceipt> uir, Set<IntentSpoofing> is) {
-        
+
         Integer senderComponentId = dsmIdxComponentIdMap.get(senderDsmIdx);
         Integer receiverComponentId = dsmIdxComponentIdMap.get(receiverDsmIdx);
-        if (dsm[senderDsmIdx][receiverDsmIdx] == 0 || dsm[senderDsmIdx][receiverDsmIdx] == 5){
+        if (dsm[senderDsmIdx][receiverDsmIdx] == 0 || dsm[senderDsmIdx][receiverDsmIdx] == 5) {
             return;
         }
         Component senderComponent = componentsMap.get(senderComponentId);
@@ -142,8 +145,8 @@ public class MatrixAnalysis {
             Application receiverApp = LPDetermination.apps.get(receiverComponent.getPackageName());
             for (Component x : receiverApp.getComponents()) {
                 int comm = dsm[x.getDsmIdx()][receiverDsmIdx];
-                if (senderDsmIdx != x.getDsmIdx()) {
-                    if (comm == 2 || comm == 3) {
+                if (receiverDsmIdx != x.getDsmIdx()) {
+                    if ((senderComponent.getType().equals(x.getType())) && (comm == 2 || comm == 3)) {
                         //                    LPDetermination.lp_intentSpoofing++;
                         IntentSpoofing intentSpoofing = new IntentSpoofing(senderComponent, receiverComponent, x);
                         is.add(intentSpoofing);
@@ -153,25 +156,48 @@ public class MatrixAnalysis {
             }
 
             if (dsm[senderDsmIdx][receiverDsmIdx] == 2 || dsm[senderDsmIdx][receiverDsmIdx] == 3) { //Implicit Intent
+                if ("activity".equals(receiverComponent.getType())) {
+                    ArrayList<IntentFilter> filters = receiverComponent.getIntentFilters();
+                    if (filters == null || filters.isEmpty()) {
+                        return;
+                    }
+
+                    if (onlyMainAction(filters)) {//if this activity declares only the MAIN action, then this component is less likely to be a malicious component
+                        return;
+                    }
+                }
+
                 //Unauthorized Intent receipt: check if there is a communication between x and another component from x's app
                 Application senderApp = LPDetermination.apps.get(senderComponent.getPackageName());
                 for (Component x : senderApp.getComponents()) {
                     if (senderDsmIdx != x.getDsmIdx()) {
                         int comm = dsm[senderDsmIdx][x.getDsmIdx()];
-                        if (comm == 2 || comm == 3) {
+                        if ((receiverComponent.getType().equals(x.getType())) && (comm == 2 || comm == 3)) {
                             //unauthorized intent receipt
                             //                    System.out.println("There is a communication between "+
                             //                            sender and receiver which they belong to different apps and 
                             //                                    there is a communication between sender and x);
                             //                    LPDetermination.lp_unauthorizedIntentReceipts ++;
                             UnauthorizedIntentReceipt u = new UnauthorizedIntentReceipt(senderComponent, receiverComponent, x);
-                            uir.add(u);    
+                            uir.add(u);
                             return;
                         }
                     }
                 }
             }
         }
+    }
+
+    private static boolean onlyMainAction(List<IntentFilter> filters) {
+        for (IntentFilter filter : filters) {
+            for (String action : filter.getActions()) {
+                if (action != null && !action.isEmpty() && !"android.intent.action.MAIN".equals(action)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+
     }
 
     private static boolean checkUse(int prmCode) {

@@ -5,26 +5,38 @@
  */
 package model;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  *
  * @author Mahmoud
  */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(propOrder = {"scheme","mimeType", "host", "port"})
 public class Data {
     //Those instance variables are shared between IF and Intent
 	private String scheme;
 	private String mimeType;
 	private String host;
         private String port;
+
+        @XmlTransient
         private String subtype;
 
         //instances variables assigned to Intents only
+        @XmlTransient
     private String uri;
+        @XmlTransient
     private String path;    
+        @XmlTransient
     private String ssp; //URI without the scheme part
+        @XmlTransient
     private String authority;
+        @XmlTransient
     private String query;
-        
-        
         
         
     @Override

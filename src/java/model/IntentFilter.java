@@ -7,17 +7,34 @@ package model;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.XmlType;
 
 /**
  *
  * @author Mahmoud
  */
+@XmlAccessorType(XmlAccessType.FIELD)
+@XmlType(propOrder = {"id","actions", "categories", "data", "pathData"})
 public class IntentFilter {
+    @XmlElement(name = "ifID")
         int id;
+        @XmlElementWrapper(name = "actions")
+        @XmlElement(name = "action")
     	List<String> actions;
-	List<Data> data;
-	List<String> categories;
+        @XmlElementWrapper(name = "categories")
+        @XmlElement(name = "category")
+        List<String> categories;
+        @XmlElementWrapper(name = "data")
+        @XmlElement(name = "data_item")
+	List<Data> data;	
+        @XmlElement(name = "dataPath")
 	String pathData;
+        @XmlTransient
         public static String sep = "/";
 
     public int getId() {
