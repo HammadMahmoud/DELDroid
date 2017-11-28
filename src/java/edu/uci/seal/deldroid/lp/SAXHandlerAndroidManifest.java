@@ -3,26 +3,26 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import static dsm.LPDetermination.PrmResourceMap;
-import static dsm.LPDetermination.apps;
-import static dsm.LPDetermination.componentsMap;
-import static dsm.LPDetermination.allUsedPermissions;
-import static dsm.LPDetermination.intents;
-import static dsm.LPDetermination.sysPackageName;
-import static dsm.XmlParserUsingSAX.appId;
+import static edu.uci.seal.deldroid.lp.LPDetermination.PrmResourceMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
+import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.allUsedPermissions;
+import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
+import static edu.uci.seal.deldroid.lp.LPDetermination.sysPackageName;
+import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import model.Intent;
+import edu.uci.seal.deldroid.model.Intent;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import model.Application;
-import model.Component;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
-import static utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
 
 /**
  *
@@ -60,11 +60,11 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
         sysApp = new Application(appId++);
         sysApp.setName(sysPackageName);
         sysApp.setPackageName(sysPackageName);
-        apps.put(sysApp.getName(), sysApp);
+        apps.put(sysPackageName, sysApp);
 
         //add a SystemService as a service component to the System app
         Component sysServiceComp = new Component(sysApp.getPackageName());
-        sysServiceComp.setName(systemServiceComp);
+        sysServiceComp.setFullName(systemServiceComp);
         sysServiceComp.setExported("true");
         sysServiceComp.setType("service");
         sysApp.getComponents().add(sysServiceComp);
@@ -111,7 +111,7 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                     if (key == null) { //new permissio group
                         //l2 = new ArrayList<>();
                         comp = new Component(sysApp.getPackageName());
-                        comp.setName(groupName);
+                        comp.setFullName(groupName);
                         comp.setType("resource");
                         comp.setExported("true");
                         comp.setDiscoveredIn(discoveredIn);
@@ -124,7 +124,7 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
 //                l2.add(permission);
                     comp.getRequiredPermissions().add(permission);
                     //groupPrmMap.get(groupName).add(permission);
-                    PrmResourceMap.put(permission, comp.getName());
+                    PrmResourceMap.put(permission, comp.getFullName());
                 }
 
                 break;

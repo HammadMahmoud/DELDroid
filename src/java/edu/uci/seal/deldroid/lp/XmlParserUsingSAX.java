@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import static dsm.LPDetermination.componentsMap;
-import model.Intent;
-import model.Application;
+import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
+import edu.uci.seal.deldroid.model.Intent;
+import edu.uci.seal.deldroid.model.Application;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -21,8 +21,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
-import model.Component;
-import static utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
+import edu.uci.seal.deldroid.model.Component;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
 
 /**
  *

@@ -3,13 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
 import android.content.Intent;
-import static dsm.LPDetermination.ECAServiceRules;
-import static dsm.LPDetermination.apps;
-import static dsm.LPDetermination.extractSystemInfo;
-import static dsm.LPDetermination.getComponentKeybyName;
+import static edu.uci.seal.deldroid.lp.LPDetermination.ECAServiceRules;
+import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
+import static edu.uci.seal.deldroid.lp.LPDetermination.extractSystemInfo;
+import static edu.uci.seal.deldroid.lp.LPDetermination.getComponentKeybyName;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -23,11 +23,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import static utils.WebServicesUtils.ANDROID_HOME;
-import static utils.WebServicesUtils.startProcess;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_HOME;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.startProcess;
 import java.util.stream.Stream;
-import model.Component;
-import model.IntentFilter;
+import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.IntentFilter;
 
 /**
  *
@@ -155,15 +155,15 @@ public class LPEnforcement {
                     sender = components.get(i);
                     if (j < COMP_CNT) {//ICC-ECA rule                            
                         receiver = components.get(j);
-                        eca = sender.getPackageName()+LPDetermination.sep+sender.getPackageName() + "." + sender.getName() + LPDetermination.sep + 
-                              receiver.getPackageName()+LPDetermination.sep+receiver.getPackageName() + "." + receiver.getName() + LPDetermination.sep + "";
+                        eca = sender.getPackageName()+LPDetermination.sep+sender.getPackageName() + "." + sender.getFullName() + LPDetermination.sep + 
+                              receiver.getPackageName()+LPDetermination.sep+receiver.getPackageName() + "." + receiver.getFullName() + LPDetermination.sep + "";
                         rules.add(eca);
                         Set<String> ifActions = receiver.getIfActions();
                         if(ifActions != null && !ifActions.isEmpty()){
                             for (String a : ifActions){
                                 if(!Intent.ACTION_MAIN.equals(a)){
                                 if(actionCntMap.get(a) == 1 || !"activity".equals(receiver.getType())){
-                                    eca = sender.getPackageName()+LPDetermination.sep+sender.getPackageName() + "." + sender.getName() + LPDetermination.sep + 
+                                    eca = sender.getPackageName()+LPDetermination.sep+sender.getPackageName() + "." + sender.getFullName() + LPDetermination.sep + 
                               ""+LPDetermination.sep + "" + LPDetermination.sep + a;
                                     rules.add(eca);
                                 }
@@ -178,12 +178,12 @@ public class LPEnforcement {
                         //check if the s's app has a permission from the r's required permission
                         boolean appHasResourcePrm = LPDetermination.isResourcePrmsInAppPrms(sender.getAppUsesPermissions(), r.getRequiredPermissions());
                         if (appHasResourcePrm) {
-                            Set<String> services = LPDetermination.getServicesAccessedByResource(r.getName());
+                            Set<String> services = LPDetermination.getServicesAccessedByResource(r.getFullName());
 //                               System.out.println("-----> "+sender.getName()+">"+resources.get(j)+" "+l+" "+appHasResourcePrm);
 //                                   System.out.println("Prevent component sender:"+s.getName()+" from accessing receiver:"+r.getName()+" system services:"+l);
                             if(services!=null){
                             for (String service : services) {
-                                eca = sender.getPackageName() + "." + sender.getName() + LPDetermination.sep + service;
+                                eca = sender.getPackageName() + "." + sender.getFullName() + LPDetermination.sep + service;
                                 rules.add(eca);
                             }
                             }
@@ -266,7 +266,7 @@ public class LPEnforcement {
             SYS_IDX = compId;
         }
         comp.setType(arr[1]);
-        comp.setName(arr[FIRST_COMP_IDX - 2]);
+        comp.setFullName(arr[FIRST_COMP_IDX - 2]);
 //        System.out.println("->"+comp.getName()+" "+filterActions);
         components.put(comp.getDsmIdx(), comp);
         for (int i = 0; i < (COMP_CNT + RES_CNT); i++) {

@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import dsm.ECArule.EcaRuleAction;
+import edu.uci.seal.deldroid.lp.ECArule.EcaRuleAction;
 
 /**
  *

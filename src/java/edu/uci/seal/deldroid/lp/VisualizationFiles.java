@@ -3,9 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import static dsm.LPDetermination.resourceStartIdx;
+import edu.uci.seal.deldroid.attack.AnalysisResult;
+import edu.uci.seal.deldroid.attack.UnauthorizedIntentReceipt;
+import edu.uci.seal.deldroid.attack.PrivEscalationInstance;
+import edu.uci.seal.deldroid.attack.IntentSpoofing;
+import static edu.uci.seal.deldroid.lp.LPDetermination.resourceStartIdx;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -15,11 +19,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
-import model.Application;
-import model.Component;
-import model.Data;
-import model.IntentFilter;
-import utils.WebServicesUtils;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.Data;
+import edu.uci.seal.deldroid.model.IntentFilter;
+import edu.uci.seal.deldroid.utils.WebServicesUtils;
 
 /**
  *
@@ -74,7 +78,7 @@ public class VisualizationFiles {
                     communicationHeader = communicationHeader.append(i + sep);
                 } else {
                     Component comp = componentsMap.get(dsmIdxComponentIdMap.get(i));                    
-                    permissionHeader = permissionHeader.append("(" + i + ") " + comp.getName() + sep);
+                    permissionHeader = permissionHeader.append("(" + i + ") " + comp.getFullName() + sep);
                 }
             }
             explicitDomainWriter.write(communicationHeader.toString() + "\n");
@@ -88,7 +92,7 @@ public class VisualizationFiles {
                 for (int col = 0; col < dsmIdxComponentIdMap.size(); col++) {                    
                         if (col == 0) {
                             Component comp = componentsMap.get(dsmIdxComponentIdMap.get(row));                            
-                            String compInfo = comp.getPackageName() + sep + comp.getName() + sep + row;
+                            String compInfo = comp.getPackageName() + sep + comp.getFullName() + sep + row;
                             explicitDomainWriter.write(compInfo);
                             implicitDomainWriter.write(compInfo);
                             usageDomainWriter.write(compInfo);
@@ -194,7 +198,7 @@ public class VisualizationFiles {
             comp1.setComponentId(100);
             comp1.setDsmIdx(1);
             comp1.setPackageName("the poackage name of its hosting application");
-            comp1.setName("name of this component");
+            comp1.setFullName("name of this component");
             comp1.setType("type of the component. VALUES: activity, service, receiver, or provider");
             comp1.setExported("indicates if the component is exported or not. VALUES: T or F");
             comp1.setRequiredPrmToAccess("The required permission to access this component, i.e., other components must have this permission to be able to communicate with this component.");

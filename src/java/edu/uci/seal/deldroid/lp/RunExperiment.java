@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import db.DataManager;
+import edu.uci.seal.deldroid.db.DataManager;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -15,7 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import static utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
 
 /**
  *
@@ -23,7 +23,7 @@ import static utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
  */
 public class RunExperiment {
 
-    private static final int REPETITION = 33;
+    private static final int REPETITION = 1;
     private static final int FROM_BUNDLE_NO = 1;
     private static final int TO_BUNDLE_NO = 10;
 
@@ -43,8 +43,10 @@ public class RunExperiment {
             Files.write(Paths.get(EXPERIMENT_RESULTS_FILES_PATH), LPDetermination.EXP_HEADER.getBytes(), StandardOpenOption.APPEND);
             for (int bundleNo = FROM_BUNDLE_NO; bundleNo <= TO_BUNDLE_NO; bundleNo++) {
                 LPDetermination.BUNDLE_NO = bundleNo;
+                LPDetermination.GENERATE_VISUALIZATION_FILES = true;
                 DataManager.updateAppsBundle(bundleNo);
                 for (int i = 0; i < REPETITION; i++) {
+                    LPDetermination.init();
                     LPDetermination.main(new String[0]);
                 }
                 if (REPETITION>1){

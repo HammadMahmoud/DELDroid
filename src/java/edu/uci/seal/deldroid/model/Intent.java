@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package model;
+package edu.uci.seal.deldroid.model;
 
-import dsm.LPDetermination;
+import edu.uci.seal.deldroid.lp.LPDetermination;
 import java.util.ArrayList;
 import java.util.List;
 

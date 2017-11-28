@@ -3,18 +3,18 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
-import db.DataManager;
+package edu.uci.seal.deldroid.lp;
+import edu.uci.seal.deldroid.db.DataManager;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import java.nio.file.StandardOpenOption;
-import utils.WebServicesUtils;
-import static utils.WebServicesUtils.ArchExtractor_FILES_PATH;
-import static utils.WebServicesUtils.startProcess;
-import static utils.WebServicesUtils.DELDROID_SCRIPTS_PATH;
+import edu.uci.seal.deldroid.utils.WebServicesUtils;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ArchExtractor_FILES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.startProcess;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.DELDROID_SCRIPTS_PATH;
 /**
  *
  * @author Mahmoud Hammad

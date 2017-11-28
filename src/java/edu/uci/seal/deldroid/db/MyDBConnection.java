@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package db;
+package edu.uci.seal.deldroid.db;
 import java.sql.*;
 /**
  *

@@ -3,16 +3,16 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package db;
+package edu.uci.seal.deldroid.db;
 
-import dsm.LPDetermination;
+import edu.uci.seal.deldroid.lp.LPDetermination;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
-import model.Application;
-import model.Component;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
 import com.mysql.jdbc.Driver;
-import static dsm.LPDetermination.componentsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -20,18 +20,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import model.Data;
-import model.Intent;
-import model.IntentFilter;
+import edu.uci.seal.deldroid.model.Data;
+import edu.uci.seal.deldroid.model.Intent;
+import edu.uci.seal.deldroid.model.IntentFilter;
 import android.content.UriMatcher;
-import static dsm.LPDetermination.apps;
-import static dsm.LPDetermination.authorityPermissionsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
+import static edu.uci.seal.deldroid.lp.LPDetermination.authorityPermissionsMap;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import static utils.WebServicesUtils.cpAuthorityPermissionsFile;
-import static utils.WebServicesUtils.resourceSysServiceFile;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.cpAuthorityPermissionsFile;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.resourceSysServiceFile;
 
 /**
  *
@@ -220,11 +220,18 @@ public class DataManager {
     
     public static void addIC3Applications(Map<String, Application> apps, int bundleNo){
         try{
-        ResultSet appRecords = executeQuery("select id, app, version from applications where bundle="+bundleNo);
+        ResultSet appRecords = executeQuery("select id, app, version, label from applications where bundle="+bundleNo);
         while (appRecords.next()){
             Application app = new Application(appRecords.getInt("id"));
             app.setPackageName(appRecords.getString("app"));
-            app.setName(appRecords.getString("app"));
+            String appLabel = appRecords.getString("label");            
+                    
+            if (appLabel == null || appLabel.isEmpty()){
+                app.setName(app.getPackageName());
+            }else{
+                app.setName(appLabel);
+            }
+            
             app.setVersionCode(appRecords.getString("version"));
             apps.put(app.getPackageName(), app);
         }
@@ -260,7 +267,8 @@ public class DataManager {
                     "getPermission(comp.`permission`) requiredPrm\n" +
                     "from components comp, classes c, applications a\n" +
                     "where comp.class_id=c.id and c.app_id=a.id " +
-                    "and c.class not like 'com.twitter.sdk.android.%' and c.class not like '%com.digits.sdk.android.%' and c.class not like '%com.squareup.picasso%' " + //for the demo only
+                    "and c.class not like 'null_type'" +
+                    //"and c.class not like 'com.twitter.sdk.android.%' and c.class not like '%com.digits.sdk.android.%' and c.class not like '%com.squareup.picasso%' " + //for the demo only
                     "and a.bundle="+bundleNo+"  order by a.id, comp.id;");
         while (records.next()){
             String compName = records.getString("name");
@@ -273,7 +281,7 @@ public class DataManager {
             
             Component comp = new Component(records.getString("packageName"), ic3ComptId);
             comp.setType(getType(records.getString("kind")));
-            comp.setName(compName);
+            comp.setFullName(compName);            
             if (records.getString("exported").equals("1"))
                 comp.setExported("T");
             else
@@ -468,7 +476,7 @@ public class DataManager {
                 for (String prm : prms){                    
                     if(appPrms.contains(prm)){
                         c.getActuallyUsedPermissions().add(prm);
-                        System.out.println("Component "+c.getName()+" uses "+prm+" from the authority "+authority+" "+c.getActuallyUsedPermissions());
+                        System.out.println("Component "+c.getFullName()+" uses "+prm+" from the authority "+authority+" "+c.getActuallyUsedPermissions());
                     }
                 }
             }

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package model;
+package edu.uci.seal.deldroid.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,6 +95,6 @@ public String toString(){
     public void setPathData(String pathData) {
         this.pathData = pathData;
     }
-
+    
     
 }

@@ -3,12 +3,15 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import db.DataManager;
-import static db.DataManager.*;
-import dsm.ECArule.EcaRuleAction;
-import static dsm.XmlParserUsingSAX.appId;
+import edu.uci.seal.deldroid.attack.UnauthorizedIntentReceipt;
+import edu.uci.seal.deldroid.attack.PrivEscalationInstance;
+import edu.uci.seal.deldroid.attack.IntentSpoofing;
+import edu.uci.seal.deldroid.db.DataManager;
+import static edu.uci.seal.deldroid.db.DataManager.*;
+import edu.uci.seal.deldroid.lp.ECArule.EcaRuleAction;
+import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -37,18 +40,18 @@ import java.util.TreeSet;
 import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import static jdk.nashorn.internal.objects.NativeString.match;
-import model.Application;
-import model.Component;
-import model.Data;
-import model.Intent;
-import model.IntentFilter;
-import static utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
-import static utils.WebServicesUtils.DSM_FILES_PATH;
-import static utils.WebServicesUtils.ArchExtractor_FILES_PATH;
-import static utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
-import static utils.WebServicesUtils.resourceSysServiceFile;
-import static utils.WebServicesUtils.LP_RULES_PATH;
-import static utils.WebServicesUtils.cpAuthorityPermissionsFile;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.Data;
+import edu.uci.seal.deldroid.model.Intent;
+import edu.uci.seal.deldroid.model.IntentFilter;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.DSM_FILES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.ArchExtractor_FILES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.EXPERIMENT_RESULTS_FILES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.resourceSysServiceFile;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.LP_RULES_PATH;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.cpAuthorityPermissionsFile;
 
 /**
  *
@@ -56,12 +59,14 @@ import static utils.WebServicesUtils.cpAuthorityPermissionsFile;
  */
 public class LPDetermination {
 
-    static int BUNDLE_NO = 51;
+    static int BUNDLE_NO = 5;
 
     static boolean TESTING_EXPERIMENT = false;
     static boolean SHORT_NAME=true;
     static boolean PRINT_DSM_INFO=true;
     static boolean PERFORM_DATA_TEST = true; //includes the Data test in the Intent resolution
+    static boolean ONLY_IAC_VUL = true; //consider only inter app vulnerabilities
+    static boolean GENERATE_VISUALIZATION_FILES = true;
 
     //check if this communication is exist in the LP architecture
     static int CHECK_SENDER = 16656;
@@ -87,7 +92,7 @@ public class LPDetermination {
     static Map<String, Set<String>> resourceSysServiceMap; //map the resource name (permission group) to the system service that requires this permission
     static Set<ECArule> ECArules;
     static Set<ECAServiceRule> ECAServiceRules;
-    static Map<Integer, Integer> dsmIdxComponentIdMap; //map a dsm index to component id
+    public static Map<Integer, Integer> dsmIdxComponentIdMap; //map a dsm index to component id
     static Map<Integer, Integer> compContentProviderMap; //map a component (dsm index) to the content provider (dsm index) that it accesses
     public static Map<String, Integer> actionCompCntMap;
     static int resourceStartIdx = Integer.MAX_VALUE; //the index of the first resource
@@ -117,7 +122,7 @@ public class LPDetermination {
     static int opCompsDependencies = 0;  //OP: number of dependencies in the components domain
     static int HandledExplicitIntentsCnt = 0;
     static int HandledImplicitIntentsCnt = 0;
-    static int OP_compsAccessCP = 0; //number of components that can access content providers from external apps
+    static int OP_compsAccessCP = 0; //number of components that can access content providers from external appsInAttacks
     static int unusedSystemIntentsCnt = 0; //number of protected broadcast Intents that the systems send but not used for this Android system
     static int usedSystemIntentsCnt = 0; //number of protected broadcast Intents that can be received by the modeled Android system
     static DecimalFormat dff = new DecimalFormat("######.####");
@@ -142,8 +147,11 @@ public class LPDetermination {
 
     public static enum interAppVar {
 
-        LP_DOMAIN1_EX(0), LP_DOMAIN1_IM(1), LP_DOMAIN1_CP(2), LP_PRIV(3),
-        OP_DOMAIN1_EX(4), OP_DOMAIN1_CP(5), OP_PRIV(6),
+        LP_DOMAIN1_EX(0), LP_DOMAIN1_IM(1), LP_DOMAIN1_CP(2),
+        //LP_PRIV(3),
+        OP_DOMAIN1_EX(4), OP_DOMAIN1_CP(5),
+        //OP_PRIV(6),
+        
         //Order the IAC based on their severity level (lower is better):
         //Passive vulnerability type: the Sender(S) is vulnerable since it uses permission(s). Unauthorized Intent Receipt. R is the potential malicious.
         //Active vulnerability type: Receiver(R) is vulnerable since it uses permission(S). Intent Spoofing. S is a potential malicious.
@@ -170,6 +178,9 @@ public class LPDetermination {
 
         public int getIndex() {
             return this.idx;
+        }
+        public static int getMaxIndex(){
+            return 14+1;
         }
     };
 
@@ -227,18 +238,12 @@ public class LPDetermination {
             ///////////////// Extract filterData from IC3
             readAuthorityPermissionsMap();
             DataManager.prepare();
-            //Add IC3 apps
+            //Add IC3 appsInAttacks
             addIC3Applications(LPDetermination.apps, BUNDLE_NO);
             addIC3AppUsesPermissions(LPDetermination.apps, BUNDLE_NO);
             addAllUsedPermissions();
-//            System.out.println("This system uses "+allUsedPermissions.size()+" permissions.");
-//            System.out.println(allUsedPermissions);
-            
-            
-
             //Domain 1: IC3 components
             addIC3Components(LPDetermination.componentsMap, BUNDLE_NO);
-//        System.out.println("IC3 Components: "+componentsMap.size());
             addProvidersPermissions(LPDetermination.componentsMap, BUNDLE_NO);
             //Add IntentFilters to their components
             addIntentFilters(LPDetermination.componentsMap, iFiltersMap, BUNDLE_NO);
@@ -248,21 +253,20 @@ public class LPDetermination {
             extractSystemInfo();
             permissionsCnt = componentsMap.size() - compsCnt;
             int systemProtectedIntents = intents.size();
-//        System.out.println("System protected Intents: "+systemProtectedIntents);
 //
             //Add Explicit Intents
             addExplicitIntents(LPDetermination.intents, BUNDLE_NO);
 //        System.out.println("IC3 explicit Intents are: "+(intents.size()-systemProtectedIntents));
-            int ic3ExplicitIntents = (intents.size() - systemProtectedIntents);
+//            int ic3ExplicitIntents = (intents.size() - systemProtectedIntents);
             //Add Implicit Intents
             addImplicitIntents(LPDetermination.intents, BUNDLE_NO);
-            int ic3ImplicitIntents = intents.size() - systemProtectedIntents - ic3ExplicitIntents;            
+//            int ic3ImplicitIntents = intents.size() - systemProtectedIntents - ic3ExplicitIntents;            
 //        System.out.println("IC3 implicit Intents are: "+ic3ImplicitIntents);
             //////////////////////////////////////// ArchExtractor
             extractInfo(ArchExtractor_FILES_PATH, outputWriter); //extract components information from ArchExtractor
-            int archExtractorIntents = intents.size() - systemProtectedIntents - ic3ExplicitIntents - ic3ImplicitIntents;
+//            int archExtractorIntents = intents.size() - systemProtectedIntents - ic3ExplicitIntents - ic3ImplicitIntents;
 //        System.out.println("ArchExtractor Intents are: "+archExtractorIntents);
-            compsCnt = componentsMap.size() - permissionsCnt;
+//            compsCnt = componentsMap.size() - permissionsCnt;
 //        System.out.println("Components : " + compsCnt+" - "+permissionsCnt);
             compsCnt = componentsMap.size() - permissionsCnt;
             addMissingCompsToComps();//components that are discovered from the intents
@@ -275,7 +279,6 @@ public class LPDetermination {
             compsDependencies = lpDependenciesCnt; //before adding Comp-Service dependincies
             compToResourceDSM();//component to system's resource communication
 //        System.out.println("Unhandled Intents:"+unhandledIntents.size());
-
             Date dateDsm2 = new Date();
 
             generateOpDSM(); //over-privilaged DSM
@@ -289,26 +292,40 @@ public class LPDetermination {
             Date generateRulesD2 = new Date();
 
             Date lpPrivAnalysisD1 = new Date();
-            lpPrivInstances = MatrixAnalysis.securityAnalysis(dsm, resourceStartIdx,lp_uir, lp_is);
-            printPrivEscalationInstance(lpPrivInstances, "LP Privilege Analysis results", outputWriter, interAppVar.LP_PRIV, true);
+            lp_uir = new HashSet<>();
+            lp_is = new HashSet<>();
+            lpPrivInstances = new HashSet<>();
+            MatrixAnalysis.securityAnalysis(dsm, resourceStartIdx,lp_uir, lp_is, lpPrivInstances);
             Date lpPrivAnalysisD2 = new Date();
+            printPrivEscalationInstance(lpPrivInstances, "LP Privilege Analysis results", outputWriter);
+            
 
             Date opPrivAnalysisD1 = new Date();
-            opPrivInstances = MatrixAnalysis.securityAnalysis(opDSM, resourceStartIdx,op_uir, op_is);
-            printPrivEscalationInstance(opPrivInstances, "OP Privilege Analysis results", outputWriter, interAppVar.OP_PRIV, false);
+            op_uir = new HashSet<>();
+            op_is = new HashSet<>();
+            opPrivInstances = new HashSet<>();
+            MatrixAnalysis.securityAnalysis(opDSM, resourceStartIdx,op_uir, op_is, opPrivInstances);
+//            printPrivEscalationInstance(opPrivInstances, "OP Privilege Analysis results", outputWriter);
             Date opPrivAnalysisD2 = new Date();
+
+            Date date2 = new Date();
             //icc attacks
             Set<String> op_uir_apps = uirApps(op_uir);
             Set<String> op_is_apps = isApps(op_is);
+            Set<String> op_pe_apps = peApps(opPrivInstances);
             Set<String> op_icc_apps = new HashSet(op_uir_apps);
             op_icc_apps.addAll(op_is_apps);
+            op_icc_apps.addAll(op_pe_apps);
             
             Set<String> lp_uir_apps = uirApps(lp_uir);
             Set<String> lp_is_apps = isApps(lp_is);
-            Set<String> lp_icc_apps = new HashSet(lp_uir_apps);
+            Set<String> lp_pe_apps = peApps(lpPrivInstances);
+            Set<String> lp_icc_apps = new HashSet();
+            lp_icc_apps.addAll(lp_uir_apps);
             lp_icc_apps.addAll(lp_is_apps);
+            lp_icc_apps.addAll(lp_pe_apps);
 
-            Date date2 = new Date();
+            
             long elapsedTime = (date2.getTime() - date1.getTime());
             long dsmTime = (dateDsm2.getTime() - dateDsm1.getTime());
             long opDsmTime = (dateOpDsm2.getTime() - dateOpDsm1.getTime());
@@ -337,7 +354,7 @@ public class LPDetermination {
             //Number of elements
             outputWriter.write("Apps:" + (apps.size() - 1) + "\n"); //exclude the system app        
             String actuallyUsedPrmsInBundle = percentOfActuallyUsedPrmsInBundle();
-            outputWriter.write("Permission Granted Domain:" + utilizedPermissions.size() + "\n");// ", Percent of actually used permissions in all apps: "+actuallyUsedPrmsInBundle+"\n");
+            outputWriter.write("Permission Granted Domain:" + utilizedPermissions.size() + "\n");// ", Percent of actually used permissions in all appsInAttacks: "+actuallyUsedPrmsInBundle+"\n");
             outputWriter.write("Components:" + compsCnt + "\n");
             outputWriter.write("Intents:" + " Explicit(" + Math.max(DataManager.explicitIntentsCnt, HandledExplicitIntentsCnt)
                     + ") Implicit(" + (DataManager.implicitIntentsCnt + usedSystemIntentsCnt) + ")\n");
@@ -391,34 +408,31 @@ public class LPDetermination {
             outputWriter.write("Max number of Resource-ECA rules (" + maxResourcesRules + ") \n");
             outputWriter.write("Number of created Resource-ECA rules (" + ECAServiceRules.size() +" comparing to "+lpDomain2+ " lppermissionGrantedDomainCnt:"+lppermissionGrantedDomainCnt+") \n");
             outputWriter.write("Resource-ECA reduction (" + dff.format(ecaResourcesRedectionPrcnt) + ") \n");
-            double privReductionPrcnt = ((opPrivInstances.size() - lpPrivInstances.size()) / (double) opPrivInstances.size()) * 100;
-            outputWriter.write("Number of privilage escalation cases in OP-Architecture (" + opPrivInstances.size() + ") instances\n");
-            outputWriter.write("Number of privilage escalation cases in LP-Architecture (" + lpPrivInstances.size() + ") instances\n");
             outputWriter.write("************************ INTER APP STATISTICS **************************\n");
             outputWriter.write("Number of Explicit Inter-App Communications in LP-Domain1 (" + interAppStatistics[interAppVar.LP_DOMAIN1_EX.getIndex()] + ")\n");
             outputWriter.write("Number of Implicit Inter-App Communications in LP-Domain1 (" + interAppStatistics[interAppVar.LP_DOMAIN1_IM.getIndex()] + ")\n");
             outputWriter.write("Number of CP access Inter-App Communications in LP-Domain1 (" + interAppStatistics[interAppVar.LP_DOMAIN1_CP.getIndex()] + ")\n");
             outputWriter.write("Number of Inter-App Communications in LP-Domain1 (" + (interAppStatistics[interAppVar.LP_DOMAIN1_EX.getIndex()]
                     + interAppStatistics[interAppVar.LP_DOMAIN1_IM.getIndex()] + interAppStatistics[interAppVar.LP_DOMAIN1_CP.getIndex()]) + ")\n");
-            outputWriter.write("Number of Inter-App Priv-Escalation instances in LP (" + interAppStatistics[interAppVar.LP_PRIV.getIndex()] + ")\n");
 
             outputWriter.write("Number of allowed Inter-App Communications in OP-Domain1 (" + interAppStatistics[interAppVar.OP_DOMAIN1_EX.getIndex()] + ")\n");
             outputWriter.write("Number of CP access Inter-App Communications in OP-Domain1 (" + interAppStatistics[interAppVar.OP_DOMAIN1_CP.getIndex()] + ")\n");
-            outputWriter.write("Number of Inter-App Priv-Escalation instances in OP(" + interAppStatistics[interAppVar.OP_PRIV.getIndex()] + ")\n");
             outputWriter.write("*************************************************************\n");
             
 //            System.out.println("Number of Inter-App Priv-Escalation instances in LP (" + interAppStatistics[interAppVar.LP_PRIV.getIndex()] + ")\n");
             //  ICC attacks
             
             outputWriter.write("OP ICC Attacks\n");
+            outputWriter.write("Privilege Escalation attacks:"+opPrivInstances.size()+" in "+op_pe_apps.size()+" apps\n");
             outputWriter.write("Unauthorized Intent receipt ICC attacks:"+op_uir.size()+" in "+op_uir_apps.size()+" apps\n");
-            outputWriter.write("Intent spoofing ICC attacks:"+op_is.size()+" in "+op_is_apps.size()+"\n");
+            outputWriter.write("Intent spoofing ICC attacks:"+op_is.size()+" in "+op_is_apps.size()+"\n");            
             outputWriter.write("OP ICC Attacks Apps "+op_icc_apps.size() +"\n");
             
 
             outputWriter.write("LP ICC Attacks\n");
-            outputWriter.write("Unauthorized Intent receipt ICC attacks:"+lp_uir.size()+" in "+lp_uir_apps.size()+"\n");
-            outputWriter.write("Intent spoofing ICC attacks:"+lp_is.size()+" in "+lp_is_apps.size()+"\n");
+            outputWriter.write("Privilege Escalation attacks:"+lpPrivInstances.size()+" in "+lp_pe_apps.size()+" apps\n");
+            outputWriter.write("Unauthorized Intent receipt ICC attacks:"+lp_uir.size()+" in "+lp_uir_apps.size()+" apps\n");
+            outputWriter.write("Intent spoofing ICC attacks:"+lp_is.size()+" in "+lp_is_apps.size()+" apps\n");
             outputWriter.write("LP ICC Attacks Apps "+lp_icc_apps.size() +"\n");
 
             outputWriter.write("*************************************************************\n");
@@ -427,9 +441,9 @@ public class LPDetermination {
                     - (interAppStatistics[interAppVar.LP_DOMAIN1_EX.getIndex()] + interAppStatistics[interAppVar.LP_DOMAIN1_IM.getIndex()] + interAppStatistics[interAppVar.LP_DOMAIN1_CP.getIndex()]);
             double IAreducedDomain1Prcnt = (IAreducedDomain1 / (double) (interAppStatistics[interAppVar.OP_DOMAIN1_EX.getIndex()] + interAppStatistics[interAppVar.OP_DOMAIN1_CP.getIndex()])) * 100;
 
-            int IAprivReduced = interAppStatistics[interAppVar.OP_PRIV.getIndex()] - interAppStatistics[interAppVar.LP_PRIV.getIndex()];
-            double IAprivReducedPrcnt = (IAprivReduced
-                    / (double) (interAppStatistics[interAppVar.OP_PRIV.getIndex()])) * 100;
+            int IAprivReduced = opPrivInstances.size() - lpPrivInstances.size();
+            double IAprivReducedPrcnt = (IAprivReduced / (double) ( opPrivInstances.size())) * 100;
+            double privReductionPrcnt = ((opPrivInstances.size() - lpPrivInstances.size()) / (double) (opPrivInstances.size())) * 100;
 
             String summary = "\nBundle " + BUNDLE_NO + sep + (apps.size() - 1) + sep + compsCnt + sep
                     + HandledExplicitIntentsCnt + sep + HandledImplicitIntentsCnt + sep + (HandledExplicitIntentsCnt + HandledImplicitIntentsCnt) + sep
@@ -456,8 +470,8 @@ public class LPDetermination {
                     + interAppStatistics[interAppVar.IA_LP_L8_PRIVATE_R_PRM.getIndex()] + sep
                     + opPrivInstances.size() + sep + lpPrivInstances.size() + sep + dff.format(privReductionPrcnt) + sep
                     //IA Priv. Esc. Reduction
-                    + interAppStatistics[interAppVar.OP_PRIV.getIndex()] + sep
-                    + interAppStatistics[interAppVar.LP_PRIV.getIndex()] + sep + dff.format(IAprivReducedPrcnt) + sep
+                    + opPrivInstances.size() + sep
+                    + lpPrivInstances.size() + sep + dff.format(IAprivReducedPrcnt) + sep
                     //ICC Attacks
                     + op_is.size()+sep+op_is_apps.size()+sep+op_uir.size()+sep+op_uir_apps.size()+sep+op_icc_apps.size()+sep
                     + lp_is.size()+sep+lp_is_apps.size()+sep+lp_uir.size()+sep+lp_uir_apps.size()+sep+lp_icc_apps.size()+sep
@@ -505,10 +519,11 @@ public class LPDetermination {
             checkComm(CHECK_SENDER, CHECK_RECEIVER);
             
             //************** Visualization tool
-            VisualizationFiles.printApps(apps);
-            VisualizationFiles.printAnalysisResult(lp_uir, lp_is, lpPrivInstances);
-            VisualizationFiles.printMDM(dsm, dsmIdxComponentIdMap, componentsMap, resourceStartIdx);
-            
+            if (GENERATE_VISUALIZATION_FILES){
+                VisualizationFiles.printApps(apps);
+                VisualizationFiles.printAnalysisResult(lp_uir, lp_is, lpPrivInstances);
+                VisualizationFiles.printMDM(dsm, dsmIdxComponentIdMap, componentsMap, resourceStartIdx);
+            }
             
         } catch (Exception e) {
             e.printStackTrace();
@@ -525,27 +540,40 @@ public class LPDetermination {
     }
     
     private static Set<String> uirApps(Set<UnauthorizedIntentReceipt> uirs){
-        Set<String> apps = new HashSet<>();
+        Set<String> appsInAttacks = new HashSet<>();
         for (UnauthorizedIntentReceipt u: uirs){
-            String app1 = u.getsComponent().getPackageName();
-            String app2 = u.getrComponent().getPackageName();
-            apps.add(app1);
-            apps.add(app2);
+            String app1 = u.getVulComponent().getPackageName();
+            String app2 = u.getMalComponent().getPackageName();
+            appsInAttacks.add(app1);
+            appsInAttacks.add(app2);
         }
-        return apps;
+        return appsInAttacks;
     }
 
     private static Set<String> isApps(Set<IntentSpoofing> iss){
-        Set<String> apps = new HashSet<>();
+        Set<String> appsInAttackes = new HashSet<>();
         for (IntentSpoofing u: iss){
-            String app1 = u.getsComponent().getPackageName();
-            String app2 = u.getrComponent().getPackageName();
-            apps.add(app1);
-            apps.add(app2);
+            String app1 = u.getMalComponent().getPackageName();
+            String app2 = u.getVulComponent().getPackageName();
+            appsInAttackes.add(app1);
+            appsInAttackes.add(app2);
         }
-        return apps;
+        return appsInAttackes;
         
     }
+    private static Set<String> peApps(Set<PrivEscalationInstance> instances){
+        Set<String> appsInAttackes = new HashSet<>();
+        for (PrivEscalationInstance instance : instances){
+            String app1 = instance.getMalApp();
+            String app2 = instance.getVulApp();
+            appsInAttackes.add(app1);
+            appsInAttackes.add(app2);
+        }
+        
+        return appsInAttackes;
+        
+    }
+    
     
     private static void checkComm(int senderCompId, int receiverCompId){
 //       if (senderCompId>0 && receiverCompId>0){
@@ -558,6 +586,7 @@ public class LPDetermination {
     }
 
     public static void init() {
+        resourceStartIdx = Integer.MAX_VALUE;
         XmlParserUsingSAX.appId = 0;
         lpDependenciesCnt = 0;
         opDependenciesCnt = 0;
@@ -573,6 +602,16 @@ public class LPDetermination {
         DataManager.explicitIntentsCnt = 0;
         DataManager.implicitIntentsCnt = 0;
         lpECArulesAllowedCommunication=0;
+
+     OP_compsAccessCP = 0; //number of components that can access content providers from external appsInAttacks
+     usedSystemIntentsCnt = 0; //number of protected broadcast Intents that can be received by the modeled Android system
+     dff = new DecimalFormat("######.####");
+     DATA_ACCESS_REDUCDANT = 0; //number of component-to-contentProvider access including the redundant access, i.e. more than one access to the same CP from teh same compoennt
+     sep = ","; //separator
+     rulesPath = LP_RULES_PATH + "rules.txt";
+     resourcesPath = LP_RULES_PATH + "contrainedServices.txt";    
+     lpPath = LP_RULES_PATH + "lp.csv";
+     iccAttacksPath = LP_RULES_PATH + "iccAtacks.txt";
 
         dsm = null;
         opDSM = null;
@@ -592,7 +631,7 @@ public class LPDetermination {
         actionCompCntMap = new HashMap<>();
         compContentProviderMap = new HashMap<>();
 
-        interAppStatistics = new int[interAppVar.values().length];
+        interAppStatistics = new int[interAppVar.getMaxIndex()];
         uniqueIAC = new HashSet<>();
         OP_compsAccessCP = 0;
         DATA_ACCESS_REDUCDANT = 0;
@@ -611,7 +650,7 @@ public class LPDetermination {
     }
 
     private static String percentOfActuallyUsedPrmsInBundle() {
-        //returns the average number of used permissions in all apps
+        //returns the average number of used permissions in all appsInAttacks
         double totalAppsPercentages = 0.0;
         for (Application a : apps.values()) {
             if (!sysPackageName.equals(a.getPackageName())) {
@@ -879,9 +918,9 @@ public class LPDetermination {
                 componentsMap.get(receiverComponentId).getPackageName())) {
             String iacInstance = interApp.getIndex() + "," + senderComponentId + "," + receiverComponentId;
             if (!uniqueIAC.contains(iacInstance)) {
-                if (!(interAppVar.LP_PRIV.equals(interApp) || interAppVar.OP_PRIV.equals(interApp))){
+//                if (!(interAppVar.LP_PRIV.equals(interApp) || interAppVar.OP_PRIV.equals(interApp))){
                     uniqueIAC.add(iacInstance);
-                }
+//                }
                 interAppStatistics[interApp.getIndex()] += 1;
                 if (interAppVar.LP_DOMAIN1_EX.equals(interApp) || interAppVar.LP_DOMAIN1_IM.equals(interApp)) {
                     checkIACseverity(interApp, senderComponentId, receiverComponentId);
@@ -970,7 +1009,7 @@ public class LPDetermination {
                     } else if ("F".equals(r.getExported())) {
                         //component s cannot communicate with a private component
                         opDSM[s.getDsmIdx()][r.getDsmIdx()] = 0;
-                    } else if ("receiver".equals(r.getType()) && r.getName().contains("$")) {
+                    } else if ("receiver".equals(r.getType()) && r.getFullName().contains("$")) {
                         /**
                          * Component S can communicate with a dynamically
                          * registered receiver regardless to the permission
@@ -1046,7 +1085,7 @@ public class LPDetermination {
 //                        } 
 //                        else {
 //                            String requiredPrm = r.getRequiredPrmToAccess();
-//                            if (apps.get(s.getPackageName()).getAppUsesPermissions().contains(requiredPrm)) {
+//                            if (appsInAttacks.get(s.getPackageName()).getAppUsesPermissions().contains(requiredPrm)) {
 //                                //The app has the permission to communicate with this component
 ////                                if(opDSM[s.getDsmIdx()][r.getDsmIdx()] == 0){
 //                                    opDSM[s.getDsmIdx()][r.getDsmIdx()] = 1;
@@ -1203,7 +1242,7 @@ public class LPDetermination {
                 if (emptyColumns[h - resourceStartIdx]) {
                     continue;
                 } else {
-                    String resourceName = componentsMap.get(dsmIdxComponentIdMap.get(h)).getName();
+                    String resourceName = componentsMap.get(dsmIdxComponentIdMap.get(h)).getFullName();
                     writer.write(h + " (" + resourceName + ")" + sep);
                     if (lpFile != null) {
                         lpFile.write(" (" + resourceName + ")" + sep);
@@ -1428,7 +1467,7 @@ public class LPDetermination {
         for (Entry e : componentsMap.entrySet()) {
             c = (Component) e.getValue();
             pkg = c.getPackageName();
-            eCompName = c.getName();
+            eCompName = c.getFullName();
             eCompName = eCompName.replace(pkg, "");
             if (eCompName.startsWith(".")) {
                 eCompName = eCompName.substring(1);
@@ -1538,7 +1577,7 @@ public class LPDetermination {
                                     lppermissionGrantedDomainCnt++;
                                 }
                                 
-                                Set<String> l = getServicesAccessedByResource(r.getName());
+                                Set<String> l = getServicesAccessedByResource(r.getFullName());
                                 if (l != null){
                                     contrainedContextServices.addAll(l);
                                 if (dsm[sIdx][rIdx] != 0) {
@@ -1546,21 +1585,21 @@ public class LPDetermination {
                                 boolean appHasResourcePrm = isResourcePrmsInAppPrms(apps.get(s.getPackageName()).getAppUsesPermissions(), r.getRequiredPermissions());
                                 if (appHasResourcePrm) {
                                     for (String service : l) {
-                                        ECAServiceRule rule = new ECAServiceRule(s.getName(), service, EcaRuleAction.ALLOW );
+                                        ECAServiceRule rule = new ECAServiceRule(s.getFullName(), service, EcaRuleAction.ALLOW );
                                         ECAServiceRules.add(rule);
                                     }
                                 }
                                 }
                                 }
                                 if (l==null && dsm[sIdx][rIdx] != 0){
-                                    ECAServiceRule rule = new ECAServiceRule(s.getName(), r.getName(),EcaRuleAction.ALLOW);
+                                    ECAServiceRule rule = new ECAServiceRule(s.getFullName(), r.getFullName(),EcaRuleAction.ALLOW);
                                     ECAServiceRules.add(rule);
 //                                    System.out.println("No resources are protected with this permission "+r.getName());
                                 }
                             } 
                             else {
                                 if (dsm[sIdx][rIdx] != 0) {
-                                    ECArule rule = new ECArule(s.getPackageName(), s.getName(), app.getPackageName(), r.getName(), null, EcaRuleAction.ALLOW);                                    
+                                    ECArule rule = new ECArule(s.getPackageName(), s.getFullName(), app.getPackageName(), r.getFullName(), null, EcaRuleAction.ALLOW);                                    
                                     ECArules.add(rule);
                                     dependencyFound=true;
                                 }else{
@@ -1599,20 +1638,20 @@ public class LPDetermination {
                                 //the receiver is a system component
                                 //create a Resource-ECA rule
                                 sysApp = true;
-                                Set<String> l = getServicesAccessedByResource(r.getName());                                
+                                Set<String> l = getServicesAccessedByResource(r.getFullName());                                
                                 //check if the s's app has a permission from the r's required permission
                                 boolean appHasResourcePrm = isResourcePrmsInAppPrms(apps.get(s.getPackageName()).getAppUsesPermissions(), r.getRequiredPermissions());
                                 if (appHasResourcePrm && l != null) {
                                     contrainedContextServices.addAll(l);
                                     for (String service : l) {
-                                        ECAServiceRule rule = new ECAServiceRule(s.getName(), service,EcaRuleAction.PREVENT);
+                                        ECAServiceRule rule = new ECAServiceRule(s.getFullName(), service,EcaRuleAction.PREVENT);
                                         ECAServiceRules.add(rule);
                                     }
                                 }
                             } 
                             else {
                                 sysApp = false;
-                                ECArule rule = new ECArule(s.getPackageName(), s.getName(), app.getPackageName(), r.getName(), null, EcaRuleAction.PREVENT);
+                                ECArule rule = new ECArule(s.getPackageName(), s.getFullName(), app.getPackageName(), r.getFullName(), null, EcaRuleAction.PREVENT);
                                 sRules.add(rule);
                                 //add ECA rule with sender and action if there is only one component that can handle that action
                                 for (IntentFilter f : r.getIntentFilters()) {
@@ -1620,7 +1659,7 @@ public class LPDetermination {
                                         Integer cnt = actionCompCntMap.get(action);
                                         if (!android.content.Intent.ACTION_MAIN.equals(action)) {
                                             if (cnt != null && (cnt == 1 || !"activity".equals(r.getType()))) {
-                                                rule = new ECArule(s.getPackageName(), s.getName(), null, null, action, EcaRuleAction.PREVENT);
+                                                rule = new ECArule(s.getPackageName(), s.getFullName(), null, null, action, EcaRuleAction.PREVENT);
 
 //                                            boolean b = sRules.add(rule);
 //                                            System.out.println(b+"( action "+action+" "+rule);
@@ -1642,7 +1681,7 @@ public class LPDetermination {
                             sRules.clear();
                             dependencyFound = false;
                         } else {//component S doesn't depend on app
-                            ECArule rule = new ECArule(s.getPackageName(), s.getName(), app.getPackageName(), null, null, EcaRuleAction.PREVENT);
+                            ECArule rule = new ECArule(s.getPackageName(), s.getFullName(), app.getPackageName(), null, null, EcaRuleAction.PREVENT);
                             ECArules.add(rule);
                         }
                     }
@@ -1727,10 +1766,10 @@ public class LPDetermination {
         //Search for a component in componentMap that has the same name, if found, returns the key
         for (Entry e : componentsMap.entrySet()) {
             Component c = (Component) e.getValue();
-            if (c.getName().equalsIgnoreCase(componentFullName)) {
+            if (c.getFullName().equalsIgnoreCase(componentFullName)) {
                 return c.getComponentId();
             }
-            String cFullName = c.getPackageName() + "." + c.getName().replace(c.getPackageName() + ".", "");
+            String cFullName = c.getPackageName() + "." + c.getFullName().replace(c.getPackageName() + ".", "");
             if (cFullName.equalsIgnoreCase(componentFullName)) {
                 return (Integer) e.getKey();
             }
@@ -1738,27 +1777,27 @@ public class LPDetermination {
         return null;
     }
 
-    private static void printPrivEscalationInstance(Set<PrivEscalationInstance> instances, String label, PrintWriter writer, 
-            interAppVar interApp, boolean print) {
+    private static void printPrivEscalationInstance(Set<PrivEscalationInstance> instances, String label, PrintWriter writer) {
         writer.write("\n=================== START:" + label + " ===================\n");
-        if (instances == null || instances.size() == 0) {
+        if (instances == null || instances.isEmpty()) {
             writer.write("This Android system is not vulnerable to privilage escalation attack.");
             writer.write("\n=================== END:" + label + " ===================\n");
             return;
         }
         for (PrivEscalationInstance i : instances) {
             //check if this is an inter-app attack
-            Integer senderComponentId = dsmIdxComponentIdMap.get(i.getSenderDsmIdx());
-            Integer receiverComponentId = dsmIdxComponentIdMap.get(i.getReceiverDsmIdx());
-            boolean interAppPrivEsc = interAppInstance(interApp, senderComponentId, receiverComponentId);
-            if (print && interAppPrivEsc) { //print only the Inter-App privilage escalation
-                writer.write("Component [" + i.getSenderDsmIdx() + "] "
-                        + componentsMap.get(senderComponentId).getName()
-                        + " --> [" + i.getReceiverDsmIdx() + "] "
-                        + componentsMap.get(receiverComponentId).getName()
-                        + " ON permission [" + i.getResourceDsmIdx() + "] "
-                        + componentsMap.get(dsmIdxComponentIdMap.get(i.getResourceDsmIdx())).getName()
-                        + "\n");
+//            Integer senderComponentId = dsmIdxComponentIdMap.get(i.getMalCompDsmIdx());
+//            Integer receiverComponentId = dsmIdxComponentIdMap.get(i.getVulCompDsmIdx());
+//            boolean interAppPrivEsc = interAppInstance(interApp, senderComponentId, receiverComponentId);
+            if (i.isIac() ) { //print only the Inter-App privilage escalation
+                writer.write(i.toString());
+//                writer.write("Component [" + i.getMalCompDsmIdx() + "] "
+//                        + componentsMap.get(senderComponentId).getName()
+//                        + " --> [" + i.getVulCompDsmIdx() + "] "
+//                        + componentsMap.get(receiverComponentId).getName()
+//                        + " ON permission [" + i.getResourceDsmIdx() + "] "
+//                        + componentsMap.get(dsmIdxComponentIdMap.get(i.getResourceDsmIdx())).getName()
+//                        + "\n");
             }
         }
         writer.write("\n=================== END:" + label + " ===================\n");
@@ -1788,4 +1827,14 @@ public class LPDetermination {
         }
 //        System.out.println("authorityPermissionsMap: "+authorityPermissionsMap);
     }
+    static Set<String> protectedIntentActions(){
+        Set<String> protectedActions = new HashSet<>();
+        for (Intent i : intents){
+            if (i.isSysIntent()){
+                protectedActions.add(i.getAction());                
+            }
+        }
+        return protectedActions;
+    }
+
 }

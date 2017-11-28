@@ -3,11 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/dsm/LPDetermination.java</file>
-            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/dsm/VisualizationFiles.java</file>
-            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/dsm/IllustrativeExample.java</file>
-            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/model/Component.java</file>
-            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/dsm/SAXHandlerAndroidManifest.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/IllustrativeExample.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/LPDetermination.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/PrivEscalationInstance.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/VisualizationFiles.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/LPEnforcement.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/MatrixAnalysis.java</file>
+            <file>file:/Users/Mahmoud/NetBeansProjects/DELDroid/src/java/edu/uci/seal/deldroid/lp/IntentSpoofing.java</file>
         </group>
     </open-files>
 </project-private>

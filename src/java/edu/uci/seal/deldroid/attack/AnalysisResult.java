@@ -3,8 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.attack;
 
+import edu.uci.seal.deldroid.attack.UnauthorizedIntentReceipt;
+import edu.uci.seal.deldroid.attack.PrivEscalationInstance;
+import edu.uci.seal.deldroid.attack.IntentSpoofing;
 import java.util.List;
 import java.util.Set;
 import javax.xml.bind.JAXBException;
@@ -14,7 +17,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import utils.WebServicesUtils;
+import edu.uci.seal.deldroid.utils.WebServicesUtils;
 
 /**
  *

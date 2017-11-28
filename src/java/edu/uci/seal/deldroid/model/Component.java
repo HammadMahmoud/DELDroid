@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package model;
+package edu.uci.seal.deldroid.model;
 
-import dsm.LPDetermination;
-import static dsm.LPDetermination.apps;
+import edu.uci.seal.deldroid.lp.LPDetermination;
+import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,14 +17,14 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.XmlType;
-import static utils.WebServicesUtils.UNKNOW_PACKAGE;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.UNKNOW_PACKAGE;
 
 /**
  *
  * @author Mahmoud
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(propOrder = {"componentId","dsmIdx", "name", "packageName","type", "exported", "requiredPrmToAccess", 
+@XmlType(propOrder = {"componentId","dsmIdx", "compName","fullName", "packageName","type", "exported", "requiredPrmToAccess", 
                       "providerReadPermission", "providerWritePermission", "providerAuthority",
                       "requiredPermissions", "actuallyUsedPermissions", "intentFilters"})
 public class Component implements Comparable{
@@ -37,8 +37,9 @@ public class Component implements Comparable{
 //    private int id;
     private int componentId;//this is the IC3 component id
     private int dsmIdx;
-    @XmlElement(name = "compName")
-    private String name;
+    private String compName;
+//    @XmlTransient
+    private String fullName;
     private String type;
     private String exported;    //T true or F false
     @XmlElement(name = "requiredPrmToAccess")
@@ -227,14 +228,16 @@ public class Component implements Comparable{
     }
 
 
-    public String getRequiredPrmToAccess() {
+    public String getRequiredPrmToAccess() {        
         return requiredPrmToAccess;
     }
 
     //OP needs to check only this one
     public void setRequiredPrmToAccess(String requiredPrmToAccess) {
-        if (! "null".equals(requiredPrmToAccess))
-            this.requiredPrmToAccess = requiredPrmToAccess;
+        if ("null".equals(requiredPrmToAccess) || "<NULL>".equals(requiredPrmToAccess)){
+            return;
+        }
+        this.requiredPrmToAccess = requiredPrmToAccess;
     }
     public List<String> getRequiredPermissions() {
         return requiredPermissions;
@@ -263,20 +266,29 @@ public class Component implements Comparable{
         this.type = type;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+        this.compName = this.fullName.replace(this.packageName+".", "");
+    }
+
+    public String getCompName() {
+        return compName;
+    }
+
+    public void setCompName(String compName) {
+        this.compName = compName;
     }
 
     
     @Override
     public String toString(){
         String sep=LPDetermination.sep;
-//        String formattedCompName = this.name;
-        String formattedCompName = this.name.replace(packageName, "");
+//        String formattedCompName = this.fullName;
+        String formattedCompName = this.fullName.replace(packageName, "");
         if(formattedCompName.startsWith("."))
             formattedCompName=formattedCompName.substring(1);
         Application app = apps.get(this.packageName);
@@ -327,22 +339,22 @@ public class Component implements Comparable{
         if(this.componentId>=0){
             return this.componentId==c.componentId;
         }
-        String compName=this.name.replace(this.packageName+".", "");
-        String cCompName= c.name.replace(c.packageName+".", "");
+        String compName=this.fullName.replace(this.packageName+".", "");
+        String cCompName= c.fullName.replace(c.packageName+".", "");
         return this.componentId==c.componentId && this.packageName.equalsIgnoreCase(c.packageName) && compName.equalsIgnoreCase(cCompName);
     }
     
     public boolean nameEquals(Object o){
         if (!(o instanceof Component)) return false;
         Component c = (Component) o;
-        String compName=this.name.replace(this.packageName+".", "");
-        String cCompName= c.name.replace(c.packageName+".", "");
+        String compName=this.fullName.replace(this.packageName+".", "");
+        String cCompName= c.fullName.replace(c.packageName+".", "");
         return this.packageName.equalsIgnoreCase(c.packageName) && compName.equalsIgnoreCase(cCompName);
     }
 
     @Override
     public int hashCode(){
-            return this.name.hashCode()*this.packageName.hashCode()*17;
+            return this.fullName.hashCode()*this.packageName.hashCode()*17;
     }
 
     @Override

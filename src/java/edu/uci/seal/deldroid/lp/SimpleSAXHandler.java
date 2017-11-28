@@ -3,15 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import static dsm.LPDetermination.apps;
-import static dsm.LPDetermination.componentsMap;
-import static dsm.LPDetermination.intents;
-import static dsm.LPDetermination.missingComps;
-
-import static dsm.XmlParserUsingSAX.appId;
-import model.Intent;
+import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
+import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
+import static edu.uci.seal.deldroid.lp.LPDetermination.missingComps;
+import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
+import edu.uci.seal.deldroid.model.Intent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -20,14 +19,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import model.Application;
-import model.Component;
-import model.Data;
-import model.IntentFilter;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.Data;
+import edu.uci.seal.deldroid.model.IntentFilter;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
-import static utils.WebServicesUtils.UNKNOW_PACKAGE;
+import static edu.uci.seal.deldroid.utils.WebServicesUtils.UNKNOW_PACKAGE;
 
 /**
  *
@@ -168,12 +167,16 @@ class SimpleSAXHandler extends DefaultHandler {
 //                System.out.println(currIntent.getSender()+" "+currIntent.getSenderComponentId()+" "+currIntent.getReceiver());
                 }
                 break;
-                    case "appRequiredPermissions":
+            case "appRequiredPermissions":
                         if (apps.containsKey(currApp.getPackageName())){
                             Application a = apps.get(currApp.getPackageName());
                             a.setAppActuallyUsesPermissions(currApp.getAppActuallyUsesPermissions());
                             a.setAppDefinedPermissions(currApp.getAppDefinedPermissions());
                             a.setAppRequiredPermissions(currApp.getAppRequiredPermissions());
+                            if (a.getName() == null || a.getName().isEmpty()){
+                                a.setName(currApp.getName());
+                            }
+                            
                         }else{
                             apps.put(currApp.getPackageName(), currApp);
                         }
@@ -200,6 +203,9 @@ class SimpleSAXHandler extends DefaultHandler {
                         break;
                     case "versionName":
                         currApp.setVersionName(value);
+                        break;
+                    case "appLabel":
+                        currApp.setName(value);
                         break;
                     case "appUsesPermission":
                         currApp.getAppUsesPermissions().add(value);
@@ -234,7 +240,7 @@ class SimpleSAXHandler extends DefaultHandler {
                         currComp.setType(value);
                         break;
                     case "name":
-                          currComp.setName(componentFullName(currApp.getPackageName(), value));
+                          currComp.setFullName(componentFullName(currApp.getPackageName(), value));
                         break;
                     case "exported":
                         currComp.setExported(value);

@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package model;
+package edu.uci.seal.deldroid.model;
 
-import dsm.LPDetermination;
+import edu.uci.seal.deldroid.lp.LPDetermination;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +17,8 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import utils.WebServicesUtils;
+import edu.uci.seal.deldroid.utils.WebServicesUtils;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
@@ -32,10 +33,10 @@ import utils.WebServicesUtils;
 public class Application {
 
     int appId;
-    String name;
+    private String name; //app label
     String packageName;
     String versionCode;
-    String versionName;
+    String versionName;        
     String appcategory; //app category as it appears in the app store, for example: travel, game, etc
     @XmlElementWrapper(name = "appUsesPermissions")
     @XmlElement(name = "appUsesPermission")

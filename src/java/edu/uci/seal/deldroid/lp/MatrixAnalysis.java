@@ -3,24 +3,30 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package dsm;
+package edu.uci.seal.deldroid.lp;
 
-import static dsm.LPDetermination.componentsMap;
-import static dsm.LPDetermination.dsmIdxComponentIdMap;
+import edu.uci.seal.deldroid.attack.UnauthorizedIntentReceipt;
+import edu.uci.seal.deldroid.attack.PrivEscalationInstance;
+import edu.uci.seal.deldroid.attack.IntentSpoofing;
+import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.dsmIdxComponentIdMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import model.Application;
-import model.Component;
-import model.IntentFilter;
+import edu.uci.seal.deldroid.model.Application;
+import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.Intent;
+import edu.uci.seal.deldroid.model.IntentFilter;
 
 /**
  *
  * @author Mahmoud
  */
 public class MatrixAnalysis {
+    private static Set<String> protectedActions;
 
     public static void main(String[] args) {
         int[][] dsm = {{0, 1, 0, 0, 0},
@@ -82,14 +88,16 @@ public class MatrixAnalysis {
         return emptyColumns;
     }
 
-    public static Set<PrivEscalationInstance> securityAnalysis(int[][] dsm, int resourceIdx,
-            Set<UnauthorizedIntentReceipt> uir, Set<IntentSpoofing> is) {
+    public static void securityAnalysis(int[][] dsm, int resourceIdx,
+            Set<UnauthorizedIntentReceipt> uir, Set<IntentSpoofing> is, Set<PrivEscalationInstance> pe) {
         //Privilege escalation analysis
         //unauthorized Intent receipt
         //Intent spoofing
 
 //        System.out.println("resourceIdx: "+resourceIdx);
-        Set<PrivEscalationInstance> instances = new HashSet<>();
+//        Set<PrivEscalationInstance> instances = new HashSet<>();
+        
+        protectedActions = LPDetermination.protectedIntentActions();
         boolean instanceAdded = false;
         PrivEscalationInstance instance = null;
         for (int x = 0; x < resourceIdx - 1; x++) { //note that component (resourceIdx-1) is the SystemService component
@@ -108,7 +116,13 @@ public class MatrixAnalysis {
                                     ) {
                                 //privilage escalation
                                 instance = new PrivEscalationInstance(x, y, (i + resourceIdx));
-                                instances.add(instance);
+                                if (LPDetermination.ONLY_IAC_VUL){
+                                    if (instance.isIac()){
+                                        pe.add(instance);
+                                    }
+                                }else{
+                                    pe.add(instance);
+                                }
                                 instanceAdded = true;
 //                            System.out.println("Component "+x+" is vulnerable to privilege escalation attack by component "+y+" that can have access to permission "+(i+resourceIdx));
                             }
@@ -125,7 +139,6 @@ public class MatrixAnalysis {
                 }
             }
         }
-        return instances;
     }
 
     private static void iccAttackAnalysis(int senderDsmIdx, int receiverDsmIdx, int[][] dsm,
@@ -171,21 +184,52 @@ public class MatrixAnalysis {
                 Application senderApp = LPDetermination.apps.get(senderComponent.getPackageName());
                 for (Component x : senderApp.getComponents()) {
                     if (senderDsmIdx != x.getDsmIdx()) {
-                        int comm = dsm[senderDsmIdx][x.getDsmIdx()];
+                        int comm = dsm[senderDsmIdx][x.getDsmIdx()];                        
                         if ((receiverComponent.getType().equals(x.getType())) && (comm == 2 || comm == 3)) {
                             //unauthorized intent receipt
                             //                    System.out.println("There is a communication between "+
                             //                            sender and receiver which they belong to different apps and 
                             //                                    there is a communication between sender and x);
                             //                    LPDetermination.lp_unauthorizedIntentReceipts ++;
-                            UnauthorizedIntentReceipt u = new UnauthorizedIntentReceipt(senderComponent, receiverComponent, x);
-                            uir.add(u);
+                            
+                            //check if the malicious component and the potential component have the same intent filter so by sending an implicit Intent from teh vulnerable component, sender, a malicious component can receive it
+                            if (matchedFilter(receiverComponent, x)){
+                                UnauthorizedIntentReceipt u = new UnauthorizedIntentReceipt(senderComponent, receiverComponent, x);
+                                uir.add(u);
+                            }
+                            
                             return;
                         }
                     }
                 }
             }
         }
+    }
+    private static boolean matchedFilter(Component mal, Component pot){
+        boolean found = false;
+        List<IntentFilter> malFilters = mal.getIntentFilters();
+        List<IntentFilter> potFilters = pot.getIntentFilters();
+        
+        if (malFilters == null || potFilters == null || malFilters.isEmpty() || potFilters.isEmpty() ){
+            return false;
+        }
+        //compare only the actions
+        Set<String> malActions = new HashSet<>();
+        for (IntentFilter filter : malFilters){
+            malActions.addAll(filter.getActions());            
+        }
+        for (IntentFilter filter : potFilters){
+            for (String action : filter.getActions()){
+                if (!protectedActions.contains(action) && malActions.contains(action)){
+//                    System.out.println("matched action: "+action);
+                    return true;
+            }
+            }
+        }
+        
+        return found;
+        
+        
     }
 
     private static boolean onlyMainAction(List<IntentFilter> filters) {
