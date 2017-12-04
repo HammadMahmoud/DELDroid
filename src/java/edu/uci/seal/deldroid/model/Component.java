@@ -50,6 +50,10 @@ public class Component implements Comparable{
     private String providerWritePermission;
     @XmlElement(name = "providerAuthority")
     private String providerAuthority;
+    
+    @XmlTransient
+    private boolean systemComponent = false;
+    
 
     
     @XmlElement(name =  "appPackageName")
@@ -92,6 +96,12 @@ public class Component implements Comparable{
         init(packageName, componentId);
     }
     private void init(String packageName, int component_id){
+        
+        if (LPDetermination.sysPackageName.equals(packageName)){
+            this.systemComponent = true;
+        }else{
+            this.systemComponent = false;
+        }
         if(UNKNOW_PACKAGE.equals(packageName)){
             componentId=-1;
         }else if (component_id==-2){
@@ -137,6 +147,14 @@ public class Component implements Comparable{
 
     public void setAppUsesPermissions(List<String> appUsesPermissions) {
         this.appUsesPermissions = appUsesPermissions;
+    }
+
+    public boolean isSystemComponent() {
+        return systemComponent;
+    }
+
+    public void setSystemComponent(boolean systemComponent) {
+        this.systemComponent = systemComponent;
     }
 
     

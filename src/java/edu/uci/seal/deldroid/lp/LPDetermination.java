@@ -45,6 +45,7 @@ import edu.uci.seal.deldroid.model.Component;
 import edu.uci.seal.deldroid.model.Data;
 import edu.uci.seal.deldroid.model.Intent;
 import edu.uci.seal.deldroid.model.IntentFilter;
+import edu.uci.seal.deldroid.model.Permission;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.DSM_FILES_PATH;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.ArchExtractor_FILES_PATH;
@@ -76,6 +77,7 @@ public class LPDetermination {
     static PrintWriter iac;
     static Set<String> uniqueIAC; //each element is senderComponentID,receiverComponentId
 
+    public static Map<Integer, Permission> permissionsMap;
     public static Map<String, Application> apps;
     public static Set<String> allUsedPermissions;
     public static Map<Integer, Component> componentsMap; //map componentId to its component
@@ -613,6 +615,7 @@ public class LPDetermination {
      lpPath = LP_RULES_PATH + "lp.csv";
      iccAttacksPath = LP_RULES_PATH + "iccAtacks.txt";
 
+     permissionsMap = new HashMap<>();
         dsm = null;
         opDSM = null;
         iFiltersMap = new HashMap<>();
@@ -1827,7 +1830,7 @@ public class LPDetermination {
         }
 //        System.out.println("authorityPermissionsMap: "+authorityPermissionsMap);
     }
-    static Set<String> protectedIntentActions(){
+    public static Set<String> protectedIntentActions(){
         Set<String> protectedActions = new HashSet<>();
         for (Intent i : intents){
             if (i.isSysIntent()){

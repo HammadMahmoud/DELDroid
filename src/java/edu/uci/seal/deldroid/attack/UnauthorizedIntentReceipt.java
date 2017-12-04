@@ -49,7 +49,7 @@ public class UnauthorizedIntentReceipt {
     }
     @Override
     public String toString(){
-        String msg = this.vulComponent.getFullName()+" -> "+this.malComponent.getFullName()+"(X:"+this.potComponent.getFullName()+")\n" ;
+        String msg = this.vulComponent.getFullName()+" -> "+this.malComponent.getFullName()+"(POT:"+this.potComponent.getFullName()+")\n" ;
         return msg;
     }
 
