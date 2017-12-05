@@ -26,12 +26,14 @@ import edu.uci.seal.deldroid.model.IntentFilter;
 import android.content.UriMatcher;
 import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
 import static edu.uci.seal.deldroid.lp.LPDetermination.authorityPermissionsMap;
+import edu.uci.seal.deldroid.model.Permission;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.cpAuthorityPermissionsFile;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.resourceSysServiceFile;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsMap;
 
 /**
  *
@@ -242,9 +244,22 @@ public class DataManager {
 
     public static void addIC3AppUsesPermissions(Map<String, Application> apps, int bundleNo){
         try{
-        ResultSet records = executeQuery("select up.uses_permission, a.id app_id, a.app, replace(ps.st,\"android.permission.\",\"\") st from usesPermissions up, permissionStrings ps, applications a where up.uses_permission=ps.id and a.id=up.app_id and a.bundle="+bundleNo);
+//        ResultSet records = executeQuery("select up.uses_permission, a.id app_id, a.app, replace(ps.st,\"android.permission.\",\"\") st from usesPermissions up, permissionStrings ps, applications a where up.uses_permission=ps.id and a.id=up.app_id and a.bundle="+bundleNo);
+        ResultSet records = executeQuery("select up.uses_permission, a.id app_id, a.app, replace(ps.st,\"android.permission.\",\"\") st, ifnull(p.level, 'n') level , ifnull(p.level, 1) systemPermission, ps.id prmId " +
+        "from applications a, usesPermissions up, permissionStrings ps " +
+        "left join permissions p " +
+        "on ps.id = p.id " +
+        "where up.uses_permission=ps.id and a.id=up.app_id and a.bundle = "+bundleNo);
+
         while (records.next()){
             apps.get(records.getString("app")).getAppUsesPermissions().add(records.getString("st"));
+            boolean systemPrm = "1".equals(records.getString("systemPermission")) ? true : false;            
+            Permission prm = new Permission(records.getString("app"), records.getString("st"), records.getString("level").charAt(0), systemPrm, records.getString("st"), records.getString("st"));
+            prm.setPrmId(records.getInt("prmId"));
+            
+            permissionsMap.put(prm.getPrmId(), prm);
+            //TODO: when reading the system manifest file, update these pemrisisons based on the data from  that file. TEST. add protection level to the name of the pemrission
+           
         }
         }catch(Exception e){
             e.printStackTrace();

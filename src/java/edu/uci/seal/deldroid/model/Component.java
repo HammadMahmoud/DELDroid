@@ -32,8 +32,6 @@ public class Component implements Comparable{
     private static Set<Integer> ids=new HashSet<>();
     @XmlTransient
     private static int SEQUENCE_ID=1000000;
-    
-    //instance variables
 //    private int id;
     private int componentId;//this is the IC3 component id
     private int dsmIdx;

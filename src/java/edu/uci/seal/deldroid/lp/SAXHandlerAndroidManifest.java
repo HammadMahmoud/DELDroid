@@ -10,6 +10,7 @@ import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
 import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
 import static edu.uci.seal.deldroid.lp.LPDetermination.allUsedPermissions;
 import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsMap;
 import static edu.uci.seal.deldroid.lp.LPDetermination.sysPackageName;
 import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import java.io.File;
@@ -20,15 +21,19 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import edu.uci.seal.deldroid.model.Application;
 import edu.uci.seal.deldroid.model.Component;
+import edu.uci.seal.deldroid.model.Permission;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.ANDROID_FRAMEWORK_MANIFEST_PATH;
+import java.util.Collection;
+import java.util.Set;
 
 /**
  *
  * @author Mahmoud
  */
 class SAXHandlerAndroidManifest extends SimpleSAXHandler {
+    private static Collection<Permission> permissions;
 //    private static int permissionCnt=0;
 
     public static void main(String[] args) {
@@ -51,6 +56,7 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
     private String currQName;
     private String groupName;
     private Component comp;
+    private Permission currPermission;
     private Application sysApp;
 //    private Map<String, List<String>> groupPrmMap;
 
@@ -63,12 +69,14 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
         apps.put(sysPackageName, sysApp);
 
         //add a SystemService as a service component to the System app
-        Component sysServiceComp = new Component(sysApp.getPackageName());
+        Component sysServiceComp = new Component(sysApp.getPackageName());        
         sysServiceComp.setFullName(systemServiceComp);
         sysServiceComp.setExported("true");
         sysServiceComp.setType("service");
         sysApp.getComponents().add(sysServiceComp);
         componentsMap.put(sysServiceComp.getComponentId(), sysServiceComp);
+        
+        permissions = permissionsMap.values();
 
     }
 
@@ -98,6 +106,11 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                 String discoveredIn = "P";
                 groupName = attributes.getValue("android:permissionGroup");
                 String permission = attributes.getValue("android:name").replace("android.permission.", "");
+                String protectionLevelStr = attributes.getValue("android:protectionLevel");
+                if (protectionLevelStr == null || protectionLevelStr.isEmpty()){
+                    protectionLevelStr = "normal";
+                }
+                char protectionLevel = protectionLevelStr.trim().charAt(0);
 
                 //add only the permissions that are needed for the apps in this system
                 if (allUsedPermissions.contains(permission)) {
@@ -117,7 +130,26 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                         comp.setDiscoveredIn(discoveredIn);
                         componentsMap.put(comp.getComponentId(), comp);
                         sysApp.getComponents().add(comp);
+                        //Mahmoud: create new permission
+                        Permission prm = new Permission(sysApp.getPackageName(), groupName, protectionLevel, true, groupName, groupName);
+                        boolean found = false;
+                        for (Permission p : permissions){
+                            if (p.isSystemPrm() && p.getName().equalsIgnoreCase(prm.getName())){
+                                System.out.println("permissions "+p.getName()+"/"+p.getProtectionLevel()+" equals "+prm.getName()+"/"+prm.getProtectionLevel());
+                                p.setProtectionLevel(protectionLevel);
+                                permissionsMap.put(p.getPrmId(), p);
+                                found=true;                                
+                            }
+                            if (found){
+                                break;
+                            }
+                        }
+                        if (!found){
+                            System.out.println("permission not found "+prm.getName());
+                            permissionsMap.put(prm.getPrmId(), prm);
+                        }
                     }
+                            
 //                else{
 //                    System.out.print("system component already exists: "+groupName+" "+key);
 //                }
@@ -125,6 +157,7 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                     comp.getRequiredPermissions().add(permission);
                     //groupPrmMap.get(groupName).add(permission);
                     PrmResourceMap.put(permission, comp.getFullName());
+                    
                 }
 
                 break;

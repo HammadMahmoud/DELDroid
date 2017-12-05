@@ -5,21 +5,37 @@
  */
 package edu.uci.seal.deldroid.model;
 
+import javax.xml.bind.annotation.XmlTransient;
+
 /**
  *
  * @author Mahmoud
  */
 public class Permission {
+    String definedByPkg;
     private Integer prmId;
     private String name;
-    char protectionLevel;
-    String definedByPkg;
+    char protectionLevel;    
     boolean systemPrm;
     String permissionGroupName;
     String resourceName; //for example, SEND_SMS permission belong to SMS resource
+    @XmlTransient
+    private static int SEQUENCE_ID=2000000;
     
+    public Permission(String definedByPkg, String name, char protectionLevel, boolean isSystemPrm, String permissionGroupName, String resourceName){
+        this.prmId = SEQUENCE_ID++;
+        this.definedByPkg = definedByPkg;
+        this.name = name;
+        this.protectionLevel = protectionLevel;
+        this.systemPrm = isSystemPrm;
+        this.permissionGroupName = permissionGroupName;
+        this.resourceName = resourceName;
+    }
     public Permission(){
-        
+        this.prmId = SEQUENCE_ID++;
+    }
+    public Permission(Integer prmId){
+        this.prmId = prmId;        
     }
 
     public Integer getPrmId() {
@@ -78,6 +94,11 @@ public class Permission {
         this.resourceName = resourceName;
     }
     
-    
+    @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb = sb.append(this.name).append("/").append(this.protectionLevel);
+        return sb.toString();
+    }
     
 }
