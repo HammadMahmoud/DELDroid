@@ -17,7 +17,7 @@ import java.util.Map.Entry;
 
 public class SystemArchitecture {
     
-    Map<DomainType, Domain> dynamicMdm;
+    public Map<DomainType, Domain> dynamicMdm;
     
     
     public SystemArchitecture(){

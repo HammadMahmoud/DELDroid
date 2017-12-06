@@ -33,7 +33,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.cpAuthorityPermissionsFile;
 import static edu.uci.seal.deldroid.utils.WebServicesUtils.resourceSysServiceFile;
-import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissions;
 
 /**
  *
@@ -252,14 +252,15 @@ public class DataManager {
         "where up.uses_permission=ps.id and a.id=up.app_id and a.bundle = "+bundleNo);
 
         while (records.next()){
-            apps.get(records.getString("app")).getAppUsesPermissions().add(records.getString("st"));
-            boolean systemPrm = "1".equals(records.getString("systemPermission")) ? true : false;            
-            Permission prm = new Permission(records.getString("app"), records.getString("st"), records.getString("level").charAt(0), systemPrm, records.getString("st"), records.getString("st"));
-            prm.setPrmId(records.getInt("prmId"));
             
-            permissionsMap.put(prm.getPrmId(), prm);
-            //TODO: when reading the system manifest file, update these pemrisisons based on the data from  that file. TEST. add protection level to the name of the pemrission
-           
+            boolean systemPrm = "1".equals(records.getString("systemPermission")) ? true : false;
+            Permission prm = new Permission(records.getInt("prmId"), records.getString("app"), records.getString("st"), records.getString("level").charAt(0), systemPrm, records.getString("st"), records.getString("st"));            
+            int prmIdx = permissions.indexOf(prm);
+            if (prmIdx < 0){
+                permissions.add(prm);
+            }
+            
+            apps.get(records.getString("app")).getAppUsesPermissions().add(prm.getName()+"/"+prm.getProtectionLevel());
         }
         }catch(Exception e){
             e.printStackTrace();

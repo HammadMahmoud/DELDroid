@@ -9,6 +9,8 @@ import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
 import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
 import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
 import static edu.uci.seal.deldroid.lp.LPDetermination.missingComps;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissions;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsProtectionLevel;
 import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import edu.uci.seal.deldroid.model.Intent;
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import edu.uci.seal.deldroid.model.Application;
 import edu.uci.seal.deldroid.model.Component;
 import edu.uci.seal.deldroid.model.Data;
 import edu.uci.seal.deldroid.model.IntentFilter;
+import edu.uci.seal.deldroid.model.Permission;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -184,6 +187,40 @@ class SimpleSAXHandler extends DefaultHandler {
         }
     }
 
+    private void addPermission(String definedBy, String prmName){
+        String permissionName = prmName.replace("android.permission.","");
+        boolean exists = false;
+        for (Permission prm : permissions){
+            if (prm.getName().equalsIgnoreCase(permissionName)){
+                exists = true;
+                break;
+            }
+        }
+        
+        if (!exists){
+            //check if the permission is one of the unused system permissions
+            String protectionLevelStr = permissionsProtectionLevel.get(permissionName);
+            char protectionLevel = 'n'; //default normal
+            boolean isSystemPrm = false;
+            if (protectionLevelStr != null){
+                protectionLevel = protectionLevelStr.charAt(0);
+                isSystemPrm = true;
+            }
+                Permission prm = new Permission(null, definedBy, permissionName, protectionLevel , isSystemPrm, permissionName, permissionName);
+                permissions.add(prm);
+            //Mahmoud TODO
+//            create a map <permission name, protection level> for all system permissions not only the used ones
+//                    when a component enforces a system permission taht has not been used, 
+//                            we can add that permission to the permissions list
+        }
+        
+//        if(! exists){ //new permission
+//            System.out.println("******* Found a new permission "+prmName+" "+prmName+" *********** check the protection level");
+//            Permission prm = new Permission(null, definedBy, prmName, 'n' , false, prmName, prmName);
+//            permissions.add(prm);
+//        }
+        
+    }
     @Override
     public void characters(char ch[], int start, int length) throws SAXException {
 
@@ -193,7 +230,7 @@ class SimpleSAXHandler extends DefaultHandler {
             if (moreAppAttributes) {
                 switch (currQName) {
                     case "packageName":
-                        currApp.setPackageName(value);                                                
+                        currApp.setPackageName(value);
                         break;
                     case "name":
                         currApp.setName(value);
@@ -209,6 +246,7 @@ class SimpleSAXHandler extends DefaultHandler {
                         break;
                     case "appUsesPermission":
                         currApp.getAppUsesPermissions().add(value);
+                        addPermission(currApp.getPackageName(), value);
                         break;
                     case "appActuallyUsesPermission":
                         currApp.getAppActuallyUsesPermissions().add(value);
@@ -216,9 +254,23 @@ class SimpleSAXHandler extends DefaultHandler {
                         break;
                     case "appDefnedPermission":
                         currApp.getAppDefinedPermissions().add(value);
+                        String permission = value.split("/")[0];
+                        String protectionLvl = value.split("/")[1];
+                        Permission prm = new Permission(null, currApp.getPackageName(), permission, protectionLvl.charAt(0) , false, permission, permission);
+                        prm.setCustomPermission(true);
+                        int prmIdx = permissions.indexOf(prm);
+                        if (prmIdx < 0) {
+//                            System.out.println("a defined permission is NOT found "+prm);
+                            permissions.add(prm);
+                        } else {
+//                            System.out.println("a defined permission is found "+prm);
+                            Permission p = permissions.get(prmIdx);
+                            p.setCustomPermission(true);
+                        }
                         break;
                     case "appRequiredPermission":
                         currApp.getAppRequiredPermissions().add(value);
+                        addPermission(currApp.getPackageName(), value);
                         break;
 //                    case "appRequiredPermissions":
 //                        if (apps.containsKey(currApp.getPackageName())){
@@ -247,6 +299,7 @@ class SimpleSAXHandler extends DefaultHandler {
                         break;
                     case "requiredPermission":
                         currComp.getRequiredPermissions().add(value);                        
+                        addPermission(currApp.getPackageName(), value);
                         if (currComp.getRequiredPrmToAccess()!=null){
                             currComp.setRequiredPrmToAccess(value);
                         }

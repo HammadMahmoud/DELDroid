@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissions;
 
 /**
  *
@@ -206,7 +207,8 @@ public class DmdmAnalysis {
             if (enforcement.dsm[receiverDsmIdx][p]==1 && granted.dsm[senderDsmIdx][p]==0){ //p is enforced by the receiver and i snot granted to the sender 
                 System.out.println("Expected ICP: "+senderDsmIdx+" -> "+receiverDsmIdx+" ["+p+"]");
                 int enforcedPrmId = enforcement.columnsID[p];
-                Permission enforcedPrm = LPDetermination.permissionsMap.get(enforcedPrmId);
+                
+                Permission enforcedPrm = getPrmById(enforcedPrmId);
                 
                 String permissionName = enforcedPrm.getName();
                 Set<String> receiverAppDefinedPrms = LPDetermination.apps.get(receiverComponent.getPackageName()).getAppDefinedPermissions();
@@ -219,6 +221,11 @@ public class DmdmAnalysis {
                 }
             }
         }
+    }
+    
+    private Permission getPrmById(Integer prmId){
+        //TODO: we need to replace this with a map in the LPDetermination        
+        return null;
     }
 
     public void pdlAnalysis() {

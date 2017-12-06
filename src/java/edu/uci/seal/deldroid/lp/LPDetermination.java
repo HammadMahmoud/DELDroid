@@ -10,6 +10,10 @@ import edu.uci.seal.deldroid.attack.PrivEscalationInstance;
 import edu.uci.seal.deldroid.attack.IntentSpoofing;
 import edu.uci.seal.deldroid.db.DataManager;
 import static edu.uci.seal.deldroid.db.DataManager.*;
+import edu.uci.seal.deldroid.dynamicmdm.AnalysisLookup;
+import edu.uci.seal.deldroid.dynamicmdm.AnalysisLookup.DomainType;
+import edu.uci.seal.deldroid.dynamicmdm.Domain;
+import edu.uci.seal.deldroid.dynamicmdm.SystemArchitecture;
 import edu.uci.seal.deldroid.lp.ECArule.EcaRuleAction;
 import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import java.io.File;
@@ -76,7 +80,9 @@ public class LPDetermination {
     static PrintWriter iac;
     static Set<String> uniqueIAC; //each element is senderComponentID,receiverComponentId
 
-    public static Map<Integer, Permission> permissionsMap;
+//    public static Map<Integer, Permission> permissionsMap;
+    public static List<Permission> permissions; //all used permissions in the system
+    public static Map<String, String> permissionsProtectionLevel; //this is a temporary map which contains all permissions not only the used ones
     public static Map<String, Application> apps;
     public static Set<String> allUsedPermissions;
     public static Map<Integer, Component> componentsMap; //map componentId to its component
@@ -89,7 +95,7 @@ public class LPDetermination {
 //    static Component[] orderedComps;
     static int[][] dsm;
     static int[][] opDSM;
-    static Map<String, String> PrmResourceMap; //map the permission to a resource name which is a permission group an dtreated here as system component
+    static Map<String, String> PrmResourceMap; //map the permission to a resource name which is a permission group and treated here as system component
     static Map<String, Set<String>> resourceSysServiceMap; //map the resource name (permission group) to the system service that requires this permission
     static Set<ECArule> ECArules;
     static Set<ECAServiceRule> ECAServiceRules;
@@ -127,7 +133,7 @@ public class LPDetermination {
     static int unusedSystemIntentsCnt = 0; //number of protected broadcast Intents that the systems send but not used for this Android system
     static int usedSystemIntentsCnt = 0; //number of protected broadcast Intents that can be received by the modeled Android system
     static DecimalFormat dff = new DecimalFormat("######.####");
-    public static int DATA_ACCESS_REDUCDANT = 0; //number of component-to-contentProvider access including the redundant access, i.e. more than one access to the same CP from teh same compoennt
+    public static int DATA_ACCESS_REDUCDANT = 0; //number of component-to-contentProvider access including the redundant access, row.e. more than one access to the same CP from teh same compoennt
     public static String sep = ","; //separator
     static String rulesPath = LP_RULES_PATH + "rules.txt";
     static String resourcesPath = LP_RULES_PATH + "contrainedServices.txt";
@@ -251,7 +257,6 @@ public class LPDetermination {
 
             //Domain 2: system permissions
             extractSystemInfo();
-            System.out.println(permissionsMap);
             permissionsCnt = componentsMap.size() - compsCnt;
             int systemProtectedIntents = intents.size();
 //
@@ -265,6 +270,7 @@ public class LPDetermination {
 //        System.out.println("IC3 implicit Intents are: "+ic3ImplicitIntents);
             //////////////////////////////////////// ArchExtractor
             extractInfo(ArchExtractor_FILES_PATH, outputWriter); //extract components information from ArchExtractor
+
 //            int archExtractorIntents = intents.size() - systemProtectedIntents - ic3ExplicitIntents - ic3ImplicitIntents;
 //        System.out.println("ArchExtractor Intents are: "+archExtractorIntents);
 //            compsCnt = componentsMap.size() - permissionsCnt;
@@ -272,10 +278,14 @@ public class LPDetermination {
             compsCnt = componentsMap.size() - permissionsCnt;
             addMissingCompsToComps();//components that are discovered from the intents
 //        System.out.println("components after missing: " + compsCnt);
-
+                        
             ////////////////////////////////////////
-            updateComponentsDsmIdx();//this is a very important step
+            assignDomainIdx();//this is a very important step
             DataManager.addContentProviderAccess(compContentProviderMap, BUNDLE_NO);
+            
+//            System.out.println(permissions);
+            //Derive the system architecture using a dynamic MDM representation
+            deriveLPsystemArchitecture();
             generateDSM(); //calculate the component communications from intents
             compsDependencies = lpDependenciesCnt; //before adding Comp-Service dependincies
             compToResourceDSM();//component to system's resource communication
@@ -333,7 +343,7 @@ public class LPDetermination {
             long opPrivAnalysisTime = (opPrivAnalysisD2.getTime() - opPrivAnalysisD1.getTime());
 
             //calculate the empty columns before printing the DSM
-            //if lpEmptyColumns[i]==true then, column i in the lp-dsm is empty
+            //if lpEmptyColumns[row]==true then, column row in the lp-dsm is empty
             boolean[] lpEmptyColumns = MatrixAnalysis.emptyColumns(dsm, resourceStartIdx);
             boolean[] opEmptyColumns = MatrixAnalysis.emptyColumns(opDSM, resourceStartIdx);
 
@@ -599,14 +609,16 @@ public class LPDetermination {
         OP_compsAccessCP = 0; //number of components that can access content providers from external appsInAttacks
         usedSystemIntentsCnt = 0; //number of protected broadcast Intents that can be received by the modeled Android system
         dff = new DecimalFormat("######.####");
-        DATA_ACCESS_REDUCDANT = 0; //number of component-to-contentProvider access including the redundant access, i.e. more than one access to the same CP from teh same compoennt
+        DATA_ACCESS_REDUCDANT = 0; //number of component-to-contentProvider access including the redundant access, row.e. more than one access to the same CP from teh same compoennt
         sep = ","; //separator
         rulesPath = LP_RULES_PATH + "rules.txt";
         resourcesPath = LP_RULES_PATH + "contrainedServices.txt";
         lpPath = LP_RULES_PATH + "lp.csv";
         iccAttacksPath = LP_RULES_PATH + "iccAtacks.txt";
 
-        permissionsMap = new HashMap<>();
+//        permissionsMap = new HashMap<>();
+        permissionsProtectionLevel = new HashMap<>();
+        permissions = new ArrayList<>();
         dsm = null;
         opDSM = null;
         iFiltersMap = new HashMap<>();
@@ -749,7 +761,7 @@ public class LPDetermination {
             if (i.isSysIntent()) {
                 usedSystemIntentsCnt++;
             } else {
-//                outputWriter.write(i.toString()+"\n");
+//                outputWriter.write(row.toString()+"\n");
             }
         });
     }
@@ -761,19 +773,24 @@ public class LPDetermination {
         });
     }
 
-    public static void updateComponentsDsmIdx() {
+    public static void assignDomainIdx(){
+        updateComponentsDomainIdx();
+        updatePermissionsDomainIdx();
+        
+    }
+    private static void updateComponentsDomainIdx() {
         /*
          update the component's dsmIdx attribute
          insert entries in dsmIdxComponentIdMap
          */
         int idx = 0;
-        TreeSet<Component> tree = new TreeSet<>();
-        for (Component c : componentsMap.values()) {
-            tree.add(c);
-        }
+        TreeSet<Component> compsTree = new TreeSet<>(componentsMap.values());
+//        for (Component c : componentsMap.values()) {
+//            compsTree.add(c);
+//        }
         int currIdx = 0;
         Component c = null;
-        for (Component t : tree) {
+        for (Component t : compsTree) {
 //            t.setDsmIdx(idx++);
             currIdx = idx++;
             c = componentsMap.get(t.getComponentId());
@@ -783,11 +800,306 @@ public class LPDetermination {
                 resourceStartIdx = Math.min(resourceStartIdx, c.getDsmIdx());
             }
         }
-        tree = null;
+        compsTree = null;
 //        System.out.println("dsmIdxComponentIdMap:"+dsmIdxComponentIdMap);                
-
+        
+    }
+    
+    private static void updatePermissionsDomainIdx(){
+        List<Permission> orderedPermissions = new ArrayList<>();
+        int idx = 0;
+        TreeSet<Permission> prmsTree = new TreeSet<>(permissions);
+        for (Permission p : prmsTree){
+            p.setPrmDomainIdx(idx);
+            orderedPermissions.add(idx, p);
+            idx++;            
+        }
+        permissions = null;
+        prmsTree = null;
+        permissions = orderedPermissions;
     }
 
+    private static int[] compsColumnsId(){
+        int[] columnsId = new int[componentsMap.size()];
+        for (Map.Entry<Integer, Integer> e : dsmIdxComponentIdMap.entrySet()){
+            columnsId[e.getKey()] = e.getValue();
+        }
+        return columnsId;
+    }
+        private static int[] prmsColumnsId(){
+        int[] columnsId = new int[permissions.size()];
+        for (Permission p : permissions){
+            columnsId[p.getPrmDomainIdx()] = p.getPrmId();
+        }
+        return columnsId;
+    }
+
+    public static SystemArchitecture deriveLPsystemArchitecture(){
+        SystemArchitecture system = new SystemArchitecture();
+        int[] compsColumnsID = compsColumnsId();
+        Domain explicitDomain = new Domain(new int[componentsMap.size()][componentsMap.size()], compsColumnsID);
+        Domain implicitDomain = new Domain(new int[componentsMap.size()][componentsMap.size()], compsColumnsID);
+        
+        Domain prmDomain = new Domain(new int[componentsMap.size()][permissions.size()], prmsColumnsId());
+        prmDomain.columnsID = prmsColumnsId();
+        Domain dataDomain = new Domain(new int[1][1]);
+
+        system.addDomain(AnalysisLookup.DomainType.EXPLICIT, explicitDomain);
+        system.addDomain(AnalysisLookup.DomainType.IMPLICIT, implicitDomain);
+        
+//        system.addDomain(AnalysisLookup.DomainType.EMPTY_PI , commDomain);
+        
+//        system.addDomain(AnalysisLookup.DomainType.DATA_ACCESS , dataDomain);
+//        system.addDomain(AnalysisLookup.DomainType.DATA_MANIPULATION , dataDomain);
+//        
+//        system.addDomain(AnalysisLookup.DomainType.CP_READ_PRM , prmDomain);
+//        system.addDomain(AnalysisLookup.DomainType.CP_WRITE_PRM , prmDomain);
+        
+        int[] permissionsColumnsId = prmsColumnsId();
+        system.addDomain(AnalysisLookup.DomainType.ENFORCEMENT , new Domain(new int[componentsMap.size()][permissions.size()], permissionsColumnsId));
+        system.addDomain(AnalysisLookup.DomainType.GRANTED , new Domain(new int[componentsMap.size()][permissions.size()], permissionsColumnsId));
+        system.addDomain(AnalysisLookup.DomainType.USAGE , new Domain(new int[componentsMap.size()][permissions.size()], permissionsColumnsId));
+                
+        deriveCommunicationDomains(system);
+        derivePermissionDomains(system);
+        
+        System.out.println(system);
+        return system;
+        
+    }
+        private static void deriveCommunicationDomains(SystemArchitecture system) {
+            Domain explicitDomain = system.dynamicMdm.get(DomainType.EXPLICIT);
+            Domain implicitDomain = system.dynamicMdm.get(DomainType.IMPLICIT);
+            
+        for (Intent i : intents) {
+            Integer senderComponentId = null;
+
+            if (i.getSenderComponentId() > 0) { //intent from IC3
+                senderComponentId = i.getSenderComponentId();
+            } else {
+                senderComponentId = getComponentKeybyName(i.getSender());
+            }
+
+            if (senderComponentId == null) {
+                //try the component name without the anonymous (inner) class,
+                //the inner class might be a listener class 
+                int dollarSignIdx = i.getSender().indexOf('$');
+                if (dollarSignIdx > 0) {
+                    senderComponentId = getComponentKeybyName(i.getSender().substring(0, dollarSignIdx));
+                }
+                if (senderComponentId == null) {
+//                    System.out.println("Warning: componentsMap does not contain the sender "+row.getSender());
+                    if (!i.isSysIntent()) {
+                        unhandledIntents.add(i);
+                    }
+                    continue;
+//                    System.exit(0);
+                }
+
+            }
+            Integer senderIdx = componentsMap.get(senderComponentId).getDsmIdx();
+
+            if (i.getReceiver() != null) { //explicit intent
+                Integer receiverComponentId = getComponentKeybyName(i.getReceiver());
+                if (receiverComponentId == null) {
+                    //try the component name without the anonymous (inner) class,
+                    //the inner class might be a listener class 
+                    int dollarSignIdx = i.getReceiver().indexOf('$');
+                    if (dollarSignIdx > 0) {
+                        receiverComponentId = getComponentKeybyName(i.getReceiver().substring(0, dollarSignIdx));
+                    }
+                    if (receiverComponentId == null) {
+                        if (i.getReceiver().contains("(.*)")) { //special case
+                            if (!i.isSysIntent()) {
+                                unhandledIntents.add(i);
+                            }
+                            continue;
+                        }
+//                    System.out.println("Warning: componentsMap does not contain the receiver "+row.getReceiver());
+                        if (!i.isSysIntent()) {
+                            unhandledIntents.add(i);
+                        }
+                        continue;
+                    }
+                }
+                Integer receiverIdx = componentsMap.get(receiverComponentId).getDsmIdx();
+                if (explicitDomain.dsm[senderIdx][receiverIdx] == 0) {
+                    lpDependenciesCnt++;
+                }
+                explicitDomain.dsm[senderIdx][receiverIdx] = 1;
+                HandledExplicitIntentsCnt++;
+                interAppInstance(interAppVar.LP_DOMAIN1_EX, senderComponentId, receiverComponentId);
+            } else { //implicit intent
+                String action = i.getAction();
+                Set<Integer> candidateReceivers = doIntentResolution(i);
+                if (candidateReceivers != null && candidateReceivers.size() > 0) {
+                    for (Integer candidateComponentId : candidateReceivers) {
+                        if (candidateComponentId != null) {
+//                            int rIdx = componentsMap.get(s).getComponentId();
+//                            Integer rIdx = getComponentKeybyName(s); 
+                            Integer candidateIdx = componentsMap.get(candidateComponentId).getDsmIdx();;
+                            int dsmVal = 2; //implicit communication
+                            try {
+                                if (implicitDomain.dsm[senderIdx][candidateIdx] == 0) {
+                                    lpDependenciesCnt++;
+                                    interAppInstance(interAppVar.LP_DOMAIN1_IM, senderComponentId, candidateComponentId);
+                                }
+                                implicitDomain.dsm[senderIdx][candidateIdx] = 1;
+
+                            } catch (Exception e) {
+//                                System.out.println("receiver:" + candidateComponentId);
+//                                System.out.println("*** length=" + n + " dsm[" + senderIdx + "][" + candidateIdx + "]");
+                                e.printStackTrace();
+                                System.exit(0);
+                            }
+                        }
+                    };
+                    if (!candidateReceivers.isEmpty()) {
+                        HandledImplicitIntentsCnt++;
+                    }
+
+                } else { //unhandled intent
+                    if (!i.isSysIntent()) {
+                        unhandledIntents.add(i);
+                    }
+                }
+            }
+        };
+        
+        // add a component accessing a content provider
+//        //TODO: should be updated
+//        for (Entry e : compContentProviderMap.entrySet()) {
+//            dsm[(Integer) e.getKey()][(Integer) e.getValue()] = 5;
+//
+//        }
+    }
+    private static Permission getPermissionByName(String prmName) {
+            String permissionName = prmName.replace("android.permission.","");
+            for (Permission prm : permissions){
+                if (prm.getName().equalsIgnoreCase(permissionName)){
+                    return prm;
+                }
+            }       
+            return null;
+        }
+    private static void derivePermissionDomains(SystemArchitecture system) {
+            Domain grantedDomain = system.dynamicMdm.get(DomainType.GRANTED);
+            Domain usageDomain = system.dynamicMdm.get(DomainType.USAGE);
+            Domain enforcementDomain = system.dynamicMdm.get(DomainType.ENFORCEMENT);
+            //we need these domains to derive the granted permission domain
+            Domain explicitDomain = system.dynamicMdm.get(DomainType.EXPLICIT);
+            Domain implicitDomain = system.dynamicMdm.get(DomainType.IMPLICIT);
+            
+            
+//        String resourceName = null;
+        try {
+            for (Component c : componentsMap.values()) {
+                if (!c.getType().equals("resource")) {
+                    //usage and granted permisions
+                    List<String> u = c.getActuallyUsedPermissions();
+                    if (u != null && u.size() > 0) {                        
+                        for (String prm : u) {
+                            Permission permission = getPermissionByName(prm);
+                            if (permission == null){
+                                System.out.println("permission "+prm +" not found in the permissions");
+                                throw new RuntimeException("permission "+prm +" not found in the permissions");
+                            }
+                            
+//                            resourceName = PrmResourceMap.get(prm); 
+//                            utilizedPermissions.add(resourceName);
+                            //add a communication between sender(r.getName) and receiver (resourceName)
+                            int senderId = c.getDsmIdx();
+//                            Integer receiverComponentId = getComponentKeybyName(resourceName);                            
+//                            int receiverId = componentsMap.get(resourceName).getComponentId();
+//                            int receiverId = componentsMap.get(receiverComponentId).getDsmIdx();                            
+//                            if (usageDomain.dsm[senderId][permission.getPrmDomainIdx()] == 0) {
+//                                lpDependenciesCnt++;
+//                            }
+                            usageDomain.dsm[senderId][permission.getPrmDomainIdx()] = 1;
+                            grantedDomain.dsm[senderId][permission.getPrmDomainIdx()] = 1;
+//                                System.out.println("Sender:"+c.getName()+" permission:"+resourceName+" "+receiverId);
+
+                        }
+                    }
+                    //enforced permission
+                    List<String> r = c.getRequiredPermissions(); //those are the enforced permissions
+                    if (r != null && r.size() > 0) {
+                        for (String p : r) {
+                            Permission permission = getPermissionByName(p);
+                            if (permission == null){
+                                System.out.println("permission "+p +" not found in the permissions");
+                                throw new RuntimeException("permission "+p +" not found in the permissions");
+                            }
+//                            resourceName = PrmResourceMap.get(p);
+//                            if (resourceName == null) {
+//                                continue;
+//                            }
+                            //add a communication between sender(r.getName) and receiver (resourceName)                            
+                            int senderId = c.getDsmIdx();
+//                            Integer receiverComponentId = getComponentKeybyName(resourceName);
+//                            int receiverId = componentsMap.get(resourceName).getComponentId();
+//                            int receiverId = componentsMap.get(receiverComponentId).getDsmIdx();
+                            enforcementDomain.dsm[senderId][permission.getPrmDomainIdx()] = 1;
+                        }
+                    }
+                }
+            }
+
+            //only granted permissions. If a component C1 communicates with another component R that uses permission P and C1's app has that pemrission, then C1 has P permission.
+            for (int row = 0; row < explicitDomain.dsm.length; row++) {
+                for (int col = 0; col < explicitDomain.dsm[0].length; col++) {
+                    if (row == col) {
+                        continue;
+                    }
+                    if (explicitDomain.dsm[row][col] != 0 || implicitDomain.dsm[row][col] != 0) {
+//                        Component sender = componentsMap.get(dsmIdxComponentIdMap.get(row));
+                        Component sender = componentsMap.get(explicitDomain.columnsID[row]);
+                        if (sender.isSystemComponent()) //system is the sender
+                        {
+                            continue;
+                        }
+//                        Component receiver = componentsMap.get(dsmIdxComponentIdMap.get(col));
+                        Component receiver = componentsMap.get(explicitDomain.columnsID[col]);
+                        
+                        if (receiver.isSystemComponent()) //system is the receiver
+                        {
+                            continue;
+                        }
+                        //sender is a component and the receiver is a component
+                        List<String> l = receiver.getActuallyUsedPermissions();
+                        if (!l.isEmpty()) {
+                            for (String p : l) {                                
+//                                resourceName = PrmResourceMap.get(p);
+                            Permission permission = getPermissionByName(p);
+                            if (permission == null){
+                                System.out.println("permission "+p +" not found in the permissions");
+                                throw new RuntimeException("permission "+p +" not found in the permissions");
+                            }
+                                //there is a legitimate reason for sender to have permission p
+                                if (apps.get(sender.getPackageName()) != null){                                    
+                                        if (apps.get(sender.getPackageName()).getAppUsesPermissions().contains(p+"/"+permission.getProtectionLevel())) {
+//                                            System.out.println("p:"+p+" in "+apps.get(sender.getPackageName()).getAppUsesPermissions());
+                                    int senderId = sender.getDsmIdx();
+//                                    Integer receiverComponentId = getComponentKeybyName(resourceName);
+//                                    int receiverId = componentsMap.get(receiverComponentId).getDsmIdx();
+                                        grantedDomain.dsm[senderId][permission.getPrmDomainIdx()] = 1; //granted
+                                }
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+            
+        }
+        
+        
+        
     static void generateDSM() {
 //        System.out.println("dsmIdxComponentIdMap contains " + dsmIdxComponentIdMap.size() + " elements");
         int n = componentsMap.size();
@@ -810,7 +1122,7 @@ public class LPDetermination {
 
                 }
                 if (senderComponentId == null) {
-//                    System.out.println("Warning: componentsMap does not contain the sender "+i.getSender());
+//                    System.out.println("Warning: componentsMap does not contain the sender "+row.getSender());
                     if (!i.isSysIntent()) {
                         unhandledIntents.add(i);
                     }
@@ -821,9 +1133,9 @@ public class LPDetermination {
             }
             Integer senderIdx = componentsMap.get(senderComponentId).getDsmIdx();
 
-//            int senderIdx = componentsMap.get(i.getSender()).getComponentId();
+//            int senderIdx = componentsMap.get(row.getSender()).getComponentId();
             if (i.getReceiver() != null) { //explicit intent
-//                int receiverIdx = componentsMap.get(i.getReceiver()).getComponentId();
+//                int receiverIdx = componentsMap.get(row.getReceiver()).getComponentId();
                 Integer receiverComponentId = getComponentKeybyName(i.getReceiver());
                 if (receiverComponentId == null) {
                     //try the component name without the anonymous (inner) class,
@@ -839,7 +1151,7 @@ public class LPDetermination {
                             }
                             continue;
                         }
-//                    System.out.println("Warning: componentsMap does not contain the receiver "+i.getReceiver());
+//                    System.out.println("Warning: componentsMap does not contain the receiver "+row.getReceiver());
                         if (!i.isSysIntent()) {
                             unhandledIntents.add(i);
                         }
@@ -962,9 +1274,9 @@ public class LPDetermination {
         int n = componentsMap.size();
         opDSM = new int[n][n];
         //orderedComps is an array of Component objects where each component placed in an index that is equal to its ID
-//        for (int i=0; i<n;i++){            
+//        for (int row=0; row<n;row++){            
         for (Component s : componentsMap.values()) {
-//            Integer rComponentId = dsmIdxComponentIdMap.get(i);
+//            Integer rComponentId = dsmIdxComponentIdMap.get(row);
 //            Component s = componentsMap.get(rComponentId);
 //            if ("resource".equals(s.getType()))
 
@@ -972,7 +1284,7 @@ public class LPDetermination {
                 continue;
             }
             for (Component r : componentsMap.values()) {
-//                Component r = orderedComps[j];
+//                Component r = orderedComps[col];
                 if ("resource".equals(r.getType())) {
                     //check if Component R can access resource C
                     //R can access C if R has at least one of the required permissions by C
@@ -984,7 +1296,7 @@ public class LPDetermination {
                             break;
                         }
                     }
-                    //The default for opDSM[i][j] is 0, so no need to add any code here
+                    //The default for opDSM[row][col] is 0, so no need to add any code here
                 } else {
                     //check if Component S can interact with Component R
 
@@ -1186,13 +1498,13 @@ public class LPDetermination {
             }
         }
 
-        /*if (i.getScheme() != null || i.getDataType() != null) {
+        /*if (row.getScheme() != null || row.getDataType() != null) {
          Data d = new Data();
-         d.setScheme(i.getScheme());
-         d.setMimeType(i.getDataType());
-         d.setHost(i.getHost());
-         d.setPathPattern(i.getPath());
-         d.setPort(i.getPort());
+         d.setScheme(row.getScheme());
+         d.setMimeType(row.getDataType());
+         d.setHost(row.getHost());
+         d.setPathPattern(row.getPath());
+         d.setPort(row.getPort());
          if (!f.getData().contains(d)) { //Data match in the Data.equals method
          return false;
          }
@@ -1274,7 +1586,7 @@ public class LPDetermination {
                         lpFile.write(compInfo);
                     }
                 }
-//         if (i==j){
+//         if (row==col){
 //            System.out.print('x'+sep);
 //         } else{
                 if (matrix[i][j] == 0) {
@@ -1309,18 +1621,18 @@ public class LPDetermination {
 //            outputWriter.write(h + sep);
 //        }
 //        outputWriter.write("\n");
-//        for (int i = 0; i < n; i++) {
-//            for (int j = 0; j < n; j++) {
-//                if (j == 0) {
-//                    outputWriter.write(orderedComps[i] + sep);
+//        for (int row = 0; row < n; row++) {
+//            for (int col = 0; col < n; col++) {
+//                if (col == 0) {
+//                    outputWriter.write(orderedComps[row] + sep);
 //                }
-////         if (i==j){
+////         if (row==col){
 ////            System.out.print('x'+sep);
 ////         } else{
-//                if (opDSM[i][j] == 0) {
+//                if (opDSM[row][col] == 0) {
 //                    outputWriter.write("" + sep);
 //                } else {
-//                    outputWriter.write(opDSM[i][j] + sep);
+//                    outputWriter.write(opDSM[row][col] + sep);
 //                }
 ////         }
 //            }
@@ -1776,17 +2088,17 @@ public class LPDetermination {
         }
         for (PrivEscalationInstance i : instances) {
             //check if this is an inter-app attack
-//            Integer senderComponentId = dsmIdxComponentIdMap.get(i.getMalCompDsmIdx());
-//            Integer receiverComponentId = dsmIdxComponentIdMap.get(i.getVulCompDsmIdx());
+//            Integer senderComponentId = dsmIdxComponentIdMap.get(row.getMalCompDsmIdx());
+//            Integer receiverComponentId = dsmIdxComponentIdMap.get(row.getVulCompDsmIdx());
 //            boolean interAppPrivEsc = interAppInstance(interApp, senderComponentId, receiverComponentId);
             if (i.isIac()) { //print only the Inter-App privilage escalation
                 writer.write(i.toString());
-//                writer.write("Component [" + i.getMalCompDsmIdx() + "] "
+//                writer.write("Component [" + row.getMalCompDsmIdx() + "] "
 //                        + componentsMap.get(senderComponentId).getName()
-//                        + " --> [" + i.getVulCompDsmIdx() + "] "
+//                        + " --> [" + row.getVulCompDsmIdx() + "] "
 //                        + componentsMap.get(receiverComponentId).getName()
-//                        + " ON permission [" + i.getResourceDsmIdx() + "] "
-//                        + componentsMap.get(dsmIdxComponentIdMap.get(i.getResourceDsmIdx())).getName()
+//                        + " ON permission [" + row.getResourceDsmIdx() + "] "
+//                        + componentsMap.get(dsmIdxComponentIdMap.get(row.getResourceDsmIdx())).getName()
 //                        + "\n");
             }
         }

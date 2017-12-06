@@ -21,6 +21,13 @@ public class Domain {
         this.dsm = dsm;
         this.columnsID = new int[this.dsm[0].length];
     }
+    public Domain(int[][] dsm, int[] columnsID){
+        if (dsm==null || dsm.length==0){
+            throw new IllegalStateException("Invalid DSM. DSM cannot be null or empty");
+        }
+        this.dsm = dsm;
+        this.columnsID = columnsID;
+    }
 
     public void setDsm(int[][] dsm) {
         this.dsm = dsm;

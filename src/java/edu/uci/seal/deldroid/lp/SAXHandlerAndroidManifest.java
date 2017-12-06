@@ -10,7 +10,8 @@ import static edu.uci.seal.deldroid.lp.LPDetermination.apps;
 import static edu.uci.seal.deldroid.lp.LPDetermination.componentsMap;
 import static edu.uci.seal.deldroid.lp.LPDetermination.allUsedPermissions;
 import static edu.uci.seal.deldroid.lp.LPDetermination.intents;
-import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsMap;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissions;
+import static edu.uci.seal.deldroid.lp.LPDetermination.permissionsProtectionLevel;
 import static edu.uci.seal.deldroid.lp.LPDetermination.sysPackageName;
 import static edu.uci.seal.deldroid.lp.XmlParserUsingSAX.appId;
 import java.io.File;
@@ -33,7 +34,6 @@ import java.util.Set;
  * @author Mahmoud
  */
 class SAXHandlerAndroidManifest extends SimpleSAXHandler {
-    private static Collection<Permission> permissions;
 //    private static int permissionCnt=0;
 
     public static void main(String[] args) {
@@ -69,15 +69,12 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
         apps.put(sysPackageName, sysApp);
 
         //add a SystemService as a service component to the System app
-        Component sysServiceComp = new Component(sysApp.getPackageName());        
+        Component sysServiceComp = new Component(sysApp.getPackageName());
         sysServiceComp.setFullName(systemServiceComp);
         sysServiceComp.setExported("true");
         sysServiceComp.setType("service");
         sysApp.getComponents().add(sysServiceComp);
         componentsMap.put(sysServiceComp.getComponentId(), sysServiceComp);
-        
-        permissions = permissionsMap.values();
-
     }
 
     @Override
@@ -107,21 +104,25 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                 groupName = attributes.getValue("android:permissionGroup");
                 String permission = attributes.getValue("android:name").replace("android.permission.", "");
                 String protectionLevelStr = attributes.getValue("android:protectionLevel");
-                if (protectionLevelStr == null || protectionLevelStr.isEmpty()){
+                if (protectionLevelStr == null || protectionLevelStr.isEmpty()) {
                     protectionLevelStr = "normal";
                 }
                 char protectionLevel = protectionLevelStr.trim().charAt(0);
-
                 //add only the permissions that are needed for the apps in this system
-                if (allUsedPermissions.contains(permission)) {
+                permissionsProtectionLevel.put(permission, protectionLevelStr);
+                if (allUsedPermissions.contains(permission + "/n")) {
+//                    System.out.println("USED: " + permission + "/" + protectionLevelStr);
                     if (groupName == null) { //new group
                         groupName = permission;
                     } else {
                         groupName = groupName.replace("android.permission-group.", "");
-                        discoveredIn = "G";
+                        discoveredIn = "G";                        
                     }
-                    Integer key = LPDetermination.getComponentKeybyName(sysApp.getPackageName() + "." + groupName);
-                    if (key == null) { //new permissio group
+                    PrmResourceMap.put(permission, groupName);
+
+//                    Integer key = LPDetermination.getComponentKeybyName(sysApp.getPackageName() + "." + groupName);
+                    Integer key = LPDetermination.getComponentKeybyName(sysApp.getPackageName() + "." + permission);                    
+                    if (key == null) { //new permission group
                         //l2 = new ArrayList<>();
                         comp = new Component(sysApp.getPackageName());
                         comp.setFullName(groupName);
@@ -131,34 +132,27 @@ class SAXHandlerAndroidManifest extends SimpleSAXHandler {
                         componentsMap.put(comp.getComponentId(), comp);
                         sysApp.getComponents().add(comp);
                         //Mahmoud: create new permission
-                        Permission prm = new Permission(sysApp.getPackageName(), groupName, protectionLevel, true, groupName, groupName);
-                        boolean found = false;
-                        for (Permission p : permissions){
-                            if (p.isSystemPrm() && p.getName().equalsIgnoreCase(prm.getName())){
-                                System.out.println("permissions "+p.getName()+"/"+p.getProtectionLevel()+" equals "+prm.getName()+"/"+prm.getProtectionLevel());
-                                p.setProtectionLevel(protectionLevel);
-                                permissionsMap.put(p.getPrmId(), p);
-                                found=true;                                
-                            }
-                            if (found){
-                                break;
-                            }
+                        Permission prm = new Permission(null, sysApp.getPackageName(), permission, protectionLevel, true, groupName, groupName);
+                        int prmIdx = permissions.indexOf(prm);
+//                        System.out.println(prmIdx + " " + permission + "/" + protectionLevelStr + " " + protectionLevel);
+                        if (prmIdx < 0) {
+//                            System.out.println("permission NOT found "+prm+" protectionLevel:"+protectionLevel);
+                            permissions.add(prm);
+                        } else {
+                            Permission p = permissions.get(prmIdx);
+                            p.setProtectionLevel(protectionLevel);
                         }
-                        if (!found){
-                            System.out.println("permission not found "+prm.getName());
-                            permissionsMap.put(prm.getPrmId(), prm);
-                        }
-                    }
-                            
-//                else{
-//                    System.out.print("system component already exists: "+groupName+" "+key);
-//                }
+                    }/* else {
+                        System.out.print("system component already exists: " + groupName + " " + permission + " " + key);
+                    }*/
 //                l2.add(permission);
                     comp.getRequiredPermissions().add(permission);
-                    //groupPrmMap.get(groupName).add(permission);
-                    PrmResourceMap.put(permission, comp.getFullName());
-                    
+                    //groupPrmMap.get(groupName).add(permission);                    
+
                 }
+//                else {
+//                    System.out.println("NOT USED: " + permission + "/" + protectionLevelStr);
+//                }
 
                 break;
         }
