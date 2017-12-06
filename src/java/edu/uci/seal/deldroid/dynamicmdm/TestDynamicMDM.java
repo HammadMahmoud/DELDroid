@@ -12,7 +12,7 @@ import edu.uci.seal.deldroid.lp.IllustrativeExample;
  *
  * @author Mahmoud
  */
-public class DynamicMDM {
+public class TestDynamicMDM {
     public static void main(String[] args){
         
         IllustrativeExample.main(null);
